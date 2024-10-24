@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   circular_menu : ^4.0.0
+  intl: ^0.17.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -81,6 +82,12 @@ flutter:
     - family: playWrite
       fonts:
         - asset: asset/PlaywriteGBS-Italic-VariableFont_wght.ttf
+    - family: arima
+      fonts:
+        - asset: asset/Arima-VariableFont_wght.ttf
+    - family: poppins
+      fonts:
+        - asset: asset/Poppins-Bold.ttf
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
