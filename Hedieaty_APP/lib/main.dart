@@ -9,7 +9,7 @@ void main() {
   runApp(
       MaterialApp(
         title: "Hedieaty",
-        home:  EventListPage(),
+        home:  ProfileScreen(),
         routes: {
           "/Home" : (context) => HomeScreen(),
           "/ProfilePage": (context) => ProfileScreen(),

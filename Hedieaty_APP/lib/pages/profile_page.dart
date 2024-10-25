@@ -1,152 +1,155 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'update_profile_page.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  _ProfileScreen createState() => _ProfileScreen();
+}
+
+class _ProfileScreen extends State<ProfileScreen> {
+  // Replace with actual user data retrieval
+  final String username = "Sasa123";
+  final String firstName = "Sasa";
+  final String lastName = "Pizza";
+  final String email = "hotChicken@example.com";
+  bool _notification = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: MyColors.gray,
       appBar: AppBar(
-        centerTitle: false,
-        elevation: 0,
-        backgroundColor: const Color(0xFF00BF6D),
-        foregroundColor: Colors.white,
-        title: const Text("Profile"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {},
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          title: const Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: Text(
+                "Profile",
+                style: TextStyle(
+                  color: MyColors.gray,
+                  fontFamily: "playWrite",
+                  fontSize: 50,
+                ),
+              ),
+          ),
+          centerTitle: true,
+          backgroundColor: MyColors.navy,
+        ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const ProfilePic(image: "https://i.postimg.cc/cCsYDjvj/user-2.png"),
+            // Profile Section
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundImage: AssetImage('asset/man.jpg'),
+                ),
+                SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      username,
+                      style: TextStyle(fontSize: 20, color: Colors.grey[600]),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "$firstName $lastName",
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 4),
+                    Text(email, style: TextStyle(color: Colors.grey)),
+                    SizedBox(height: 8),
+                    ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: MyColors.navy,
+                        ),
+                      onPressed: () {
+                        // Uncomment to navigate to update page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UpdateProfilePage(
+                              firstName: firstName,
+                              lastName: lastName,
+                              email: email,
+                            )
+                          ),
+                        );
+                      },
+                      child: const Text(
+                          "Update Profile",
+                          style: TextStyle(
+                            fontFamily: "playWrite",
+                            color: MyColors.orange,
+                          )
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 24),
+
+            // Notification Settings
             Text(
-              "Annette Black",
-              style: Theme.of(context).textTheme.titleLarge,
+              "Notification Settings",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const Divider(height: 16.0 * 2),
-            const Info(
-              infoKey: "User ID",
-              info: "@annette.me",
+            SwitchListTile(
+              title: Text("Receive notifications"),
+              value: _notification,
+              onChanged: (bool value) {
+                setState(() {
+                  _notification = value;
+                });
+              },
             ),
-            const Info(
-              infoKey: "Location",
-              info: "New York, NYC",
+            SizedBox(height: 24),
+
+            // Events Section
+            Text(
+              "My Events",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const Info(
-              infoKey: "Phone",
-              info: "(239) 555-0108",
+            Expanded(
+              child: ListView.builder(
+                itemCount: 3, // Replace with actual list count
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text("Event $index"),
+                    subtitle: Text("Associated Gift $index"),
+                    leading: Icon(Icons.event),
+                  );
+                },
+              ),
             ),
-            const Info(
-              infoKey: "Email Address",
-              info: "demo@mail.com",
-            ),
-            const SizedBox(height: 16.0),
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                width: 160,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00BF6D),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: const StadiumBorder(),
-                  ),
-                  onPressed: () {},
-                  child: const Text("Edit profile"),
+            SizedBox(height: 16),
+
+            // Pledged Gifts Button
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: MyColors.navy,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                ),
+                onPressed: () {
+                  // Add routing logic here for pledged gifts
+                },
+                child: const Text("My Pledged Gifts",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontFamily: "playWrite",
+                    color: MyColors.orange,
+                  )
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class ProfilePic extends StatelessWidget {
-  const ProfilePic({
-    super.key,
-    required this.image,
-    this.isShowPhotoUpload = false,
-    this.imageUploadBtnPress,
-  });
-
-  final String image;
-  final bool isShowPhotoUpload;
-  final VoidCallback? imageUploadBtnPress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      margin: const EdgeInsets.symmetric(vertical: 16.0),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color:
-          Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.08),
-        ),
-      ),
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage(image),
-          ),
-          InkWell(
-            onTap: imageUploadBtnPress,
-            child: CircleAvatar(
-              radius: 13,
-              backgroundColor: Theme.of(context).primaryColor,
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class Info extends StatelessWidget {
-  const Info({
-    super.key,
-    required this.infoKey,
-    required this.info,
-  });
-
-  final String infoKey, info;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            infoKey,
-            style: TextStyle(
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyLarge!
-                  .color!
-                  .withOpacity(0.8),
-            ),
-          ),
-          Text(info),
-        ],
       ),
     );
   }

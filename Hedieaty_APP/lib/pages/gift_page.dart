@@ -18,13 +18,9 @@ class Gift {
   });
 }
 
-void main() {
-  runApp(MaterialApp(
-    home: GiftListPage(),
-  ));
-}
-
 class GiftListPage extends StatefulWidget {
+  const GiftListPage({super.key});
+
   @override
   _GiftListPageState createState() => _GiftListPageState();
 }
