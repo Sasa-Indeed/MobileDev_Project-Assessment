@@ -1,22 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
-
-// Gift Model
-class Gift {
-  String name;
-  String category;
-  String status; // "Pending" or "Pledged"
-  bool isPledged;
-  String imagePath; // Local path for the image, nullable
-
-  Gift({
-    required this.name,
-    required this.category,
-    required this.status,
-    this.isPledged = false,
-    this.imagePath = 'asset/gift.png', // Optional image path
-  });
-}
+import 'package:hedieaty_app/elements/gift.dart';
 
 class GiftListPage extends StatefulWidget {
   const GiftListPage({super.key});
@@ -27,9 +11,9 @@ class GiftListPage extends StatefulWidget {
 
 class _GiftListPageState extends State<GiftListPage> {
   List<Gift> gifts = [
-    Gift(name: "Teddy Bear", category: "Toys", status: "Pending", imagePath: "asset/teddyBear.jpg"),
-    Gift(name: "Flower Bouquet", category: "Flowers", status: "Pledged", isPledged: true),
-    Gift(name: "Chocolates", category: "Food", status: "Pending"), // No image, default will be shown
+    Gift(giftName: "Teddy Bear", category: "Toys", status: "Pending", imagePath: "asset/teddyBear.jpg"),
+    Gift(giftName: "Flower Bouquet", category: "Flowers", status: "Pledged", isPledged: true),
+    Gift(giftName: "Chocolates", category: "Food", status: "Pending"), // No image, default will be shown
   ];
 
   String sortOption = 'name';
@@ -38,7 +22,7 @@ class _GiftListPageState extends State<GiftListPage> {
   void sortGifts(String option) {
     setState(() {
       if (option == 'name') {
-        gifts.sort((a, b) => a.name.compareTo(b.name));
+        gifts.sort((a, b) => a.giftName.compareTo(b.giftName));
       } else if (option == 'category') {
         gifts.sort((a, b) => a.category.compareTo(b.category));
       } else if (option == 'status') {
@@ -86,9 +70,9 @@ class _GiftListPageState extends State<GiftListPage> {
                   if (newName.isNotEmpty && newCategory.isNotEmpty) {
                     setState(() {
                       if(newImagePath == null){
-                        gifts.add(Gift(name: newName, category: newCategory, status: "Pending",));
+                        gifts.add(Gift(giftName: newName, category: newCategory, status: "Pending",));
                       }else{
-                        gifts.add(Gift(name: newName, category: newCategory, status: "Pending", imagePath: newImagePath!));
+                        gifts.add(Gift(giftName: newName, category: newCategory, status: "Pending", imagePath: newImagePath!));
                       }
                     });
                     Navigator.of(context).pop();
@@ -101,7 +85,7 @@ class _GiftListPageState extends State<GiftListPage> {
   }
 
   void editGift(Gift gift) {
-    String newName = gift.name;
+    String newName = gift.giftName;
     String newCategory = gift.category;
     String? newImagePath = gift.imagePath;
     showDialog(
@@ -115,7 +99,7 @@ class _GiftListPageState extends State<GiftListPage> {
                 TextField(
                   decoration: InputDecoration(hintText: "Gift Name"),
                   onChanged: (value) => newName = value,
-                  controller: TextEditingController(text: gift.name),
+                  controller: TextEditingController(text: gift.giftName),
                 ),
                 TextField(
                   decoration: InputDecoration(hintText: "Category"),
@@ -138,7 +122,7 @@ class _GiftListPageState extends State<GiftListPage> {
                 child: Text("Save"),
                 onPressed: () {
                   setState(() {
-                    gift.name = newName;
+                    gift.giftName = newName;
                     gift.category = newCategory;
                     gift.imagePath = newImagePath!;
                   });
@@ -230,7 +214,7 @@ class _GiftListPageState extends State<GiftListPage> {
                 radius: 30,
                 backgroundImage: AssetImage(gift.imagePath), // Use default image if no image is provided
               ),
-              title: Text(gift.name),
+              title: Text(gift.giftName),
               subtitle: Text("${gift.category} - ${gift.status}"),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,

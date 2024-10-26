@@ -92,15 +92,17 @@ class _ProfileScreen extends State<ProfileScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 24),
-
+            const SizedBox(height: 24),
             // Notification Settings
-            Text(
+            const Text(
               "Notification Settings",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold
+              ),
             ),
             SwitchListTile(
-              title: Text("Receive notifications"),
+              title: const Text("Receive notifications"),
               value: _notification,
               onChanged: (bool value) {
                 setState(() {
@@ -108,12 +110,14 @@ class _ProfileScreen extends State<ProfileScreen> {
                 });
               },
             ),
-            SizedBox(height: 24),
-
+            const SizedBox(height: 24),
             // Events Section
-            Text(
+            const Text(
               "My Events",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold
+              ),
             ),
             Expanded(
               child: ListView.builder(
@@ -134,7 +138,7 @@ class _ProfileScreen extends State<ProfileScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MyColors.navy,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
                 onPressed: () {
                   // Add routing logic here for pledged gifts
