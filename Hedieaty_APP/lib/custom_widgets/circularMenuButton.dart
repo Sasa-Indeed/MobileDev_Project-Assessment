@@ -14,6 +14,7 @@ class circularMenuButton extends StatefulWidget{
 
 class _circularMenuButton extends State<circularMenuButton>{
   final circularMenu = CircularMenu(
+      alignment: Alignment.bottomCenter,
       toggleButtonColor: MyColors.orange,
       items: [
         CircularMenuItem(

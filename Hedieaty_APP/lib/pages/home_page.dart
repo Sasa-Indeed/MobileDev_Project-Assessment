@@ -33,7 +33,7 @@ class _HomeScreen extends State<HomeScreen> {
           backgroundColor: MyColors.navy,
         ),
         body: const Friend(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
-        floatingActionButton: circularMenuButton(),
+        floatingActionButton:circularMenuButton(),
       ),
     );
   }

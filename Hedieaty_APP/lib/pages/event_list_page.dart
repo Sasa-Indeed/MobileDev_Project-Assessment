@@ -25,9 +25,9 @@ class EventListPage extends StatefulWidget {
 
 class _EventListPageState extends State<EventListPage> {
   List<Event> events = [
-    Event(name: 'Conference', category: 'Business', date: DateTime.now().add(Duration(days: 10)), status: 'Upcoming'),
-    Event(name: 'Hackathon', category: 'Tech', date: DateTime.now(), status: 'Current'),
-    Event(name: 'Music Festival', category: 'Entertainment', date: DateTime.now().subtract(Duration(days: 5)), status: 'Past'),
+    Event(name: 'Sarah\'s Birthday', category: 'Birthday', date: DateTime.now().add(Duration(days: 10)), status: 'Upcoming'),
+    Event(name: 'Wedding', category: 'Family', date: DateTime.now(), status: 'Current'),
+    Event(name: 'Reunion', category: 'Friends', date: DateTime.now().subtract(Duration(days: 5)), status: 'Past'),
   ];
 
   String selectedSortCriteria = 'name';

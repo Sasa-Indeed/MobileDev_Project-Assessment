@@ -15,6 +15,7 @@ class _ProfileScreen extends State<ProfileScreen> {
   final String firstName = "Sasa";
   final String lastName = "Pizza";
   final String email = "hotChicken@example.com";
+  IconData iconImage = Icons.notifications_active_rounded;
   bool _notification = true;
 
   @override
@@ -102,13 +103,20 @@ class _ProfileScreen extends State<ProfileScreen> {
               ),
             ),
             SwitchListTile(
+              activeTrackColor: MyColors.orange,
               title: const Text("Receive notifications"),
               value: _notification,
               onChanged: (bool value) {
                 setState(() {
                   _notification = value;
+                  if(value){
+                    iconImage = Icons.notifications_active_rounded;
+                  }else{
+                    iconImage = Icons.notifications_off_rounded;
+                  }
                 });
               },
+              secondary:  Icon(iconImage),
             ),
             const SizedBox(height: 24),
             // Events Section
@@ -126,13 +134,12 @@ class _ProfileScreen extends State<ProfileScreen> {
                   return ListTile(
                     title: Text("Event $index"),
                     subtitle: Text("Associated Gift $index"),
-                    leading: Icon(Icons.event),
+                    leading: const Icon(Icons.event),
                   );
                 },
               ),
             ),
-            SizedBox(height: 16),
-
+            const SizedBox(height: 16),
             // Pledged Gifts Button
             Center(
               child: ElevatedButton(
