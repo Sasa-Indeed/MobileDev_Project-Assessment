@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
-import 'package:hedieaty_app/elements/gift.dart';
+import 'package:hedieaty_app/models/gift.dart';
 
 class GiftListPage extends StatefulWidget {
   const GiftListPage({super.key});

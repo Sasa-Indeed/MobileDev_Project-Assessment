@@ -11,7 +11,7 @@ void main() {
   runApp(
       MaterialApp(
         title: "Hedieaty",
-        home:  GiftDetailsPage(),
+        home:  ProfileScreen(),
         routes: {
           "/Home"             : (context) => HomeScreen(),
           "/ProfilePage"      : (context) => ProfileScreen(),

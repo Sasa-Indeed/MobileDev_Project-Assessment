@@ -32,7 +32,7 @@ class _HomeScreen extends State<HomeScreen> {
           centerTitle: true,
           backgroundColor: MyColors.navy,
         ),
-        body: const Friend(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
+        body: const Friends(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
         floatingActionButton:circularMenuButton(),
       ),
     );

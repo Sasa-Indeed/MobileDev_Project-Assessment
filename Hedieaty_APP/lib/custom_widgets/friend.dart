@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 
-class Friend extends StatefulWidget{
+class Friends extends StatefulWidget{
   final String image, name, eventStatus;
-  const Friend({super.key, required this.image, required this.name, required this.eventStatus});
+  const Friends({super.key, required this.image, required this.name, required this.eventStatus});
 
   @override
-  State<Friend> createState() => _Friend();
+  State<Friends> createState() => _Friend();
 
 }
 
-class _Friend extends State<Friend>{
+class _Friend extends State<Friends>{
   @override
   Widget build(BuildContext context) {
     return Card(
