@@ -4,8 +4,6 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class UserDatabaseServices {
-
-  // Get the database instance
   static Future<Database> _getDB() async {
     return openDatabase(
       join(await getDatabasesPath(), DatabaseVersionControl.dbName),
@@ -35,71 +33,43 @@ class UserDatabaseServices {
     );
   }
 
-  // Insert a user and their preferences
   static Future<int> insertUser(User user) async {
     final db = await _getDB();
 
-    // Start a transaction
-    return await db.transaction((txn) async {
-      // Insert the user
-      int userId = await txn.insert(
-        "User",
-        {
-          'name': user.name,
-          'email': user.email,
-          'phoneNumber': user.phoneNumber,
-          'isNotificationEnabled': user.isNotificationEnabled ? 1 : 0,
-        },
+    // Insert the user
+    int userId = await db.insert("User", user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+
+    // Insert preferences
+    for (String preference in user.preferences) {
+      await db.insert(
+        "Preferences",
+        {'userId': userId, 'preference': preference},
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+    }
 
-      // Insert preferences
-      for (String preference in user.preferences) {
-        await txn.insert(
-          "Preferences",
-          {'userId': userId, 'preference': preference},
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-
-      return userId;
-    });
+    return userId;
   }
 
   // Update a user and their preferences
   static Future<int> updateUser(User user) async {
     final db = await _getDB();
 
-    // Start a transaction
-    return await db.transaction((txn) async {
-      // Update the user
-      int updated = await txn.update(
-        "User",
-        {
-          'name': user.name,
-          'email': user.email,
-          'phoneNumber': user.phoneNumber,
-          'isNotificationEnabled': user.isNotificationEnabled ? 1 : 0,
-        },
-        where: "id = ?",
-        whereArgs: [user.id],
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+    // Update the user
+    int updated = await db.update("User", user.toJson(), where: "id = ?" ,  whereArgs: [user.id],
+        conflictAlgorithm: ConflictAlgorithm.replace);
 
-      // Clear old preferences
-      await txn.delete("Preferences", where: "userId = ?", whereArgs: [user.id]);
-
-      // Insert new preferences
-      for (String preference in user.preferences) {
-        await txn.insert(
+    //update preferences
+    for (String preference in user.preferences) {
+      await db.update(
           "Preferences",
           {'userId': user.id, 'preference': preference},
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
+          where: "id = ?" ,  whereArgs: [user.id],
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    }
 
-      return updated;
-    });
+    return updated;
+
   }
 
   // Delete a user and their preferences
@@ -108,38 +78,41 @@ class UserDatabaseServices {
     return await db.delete("User", where: "id = ?", whereArgs: [userId]);
   }
 
-  // Get all users with their preferences
   static Future<List<User>> getAllUsers() async {
     final db = await _getDB();
 
-    // Get users
+    // Fetch all users
     final List<Map<String, dynamic>> userMaps = await db.query("User");
 
     if (userMaps.isEmpty) return [];
 
-    // Generate User objects with their preferences
-    List<User> users = [];
-    for (var userMap in userMaps) {
-      // Get preferences for the user
-      final List<Map<String, dynamic>> preferenceMaps = await db.query(
-        "Preferences",
-        where: "userId = ?",
-        whereArgs: [userMap['id']],
-      );
+    List<User> users = List.generate(
+      userMaps.length,
+          (index) => User.fromJson(userMaps[index]),
+    );
 
-      List<String> preferences =
-      preferenceMaps.map((map) => map['preference'] as String).toList();
-
-      users.add(User(
-        id: userMap['id'],
-        name: userMap['name'],
-        email: userMap['email'],
-        phoneNumber: userMap['phoneNumber'],
-        isNotificationEnabled: userMap['isNotificationEnabled'] == 1,
-        preferences: preferences,
-      ));
+    for (User user in users) {
+      user.preferences = await _getUserPreferences(user.id!);
     }
 
     return users;
+  }
+
+  static Future<List<String>> _getUserPreferences(int userId) async {
+    final db = await _getDB();
+
+    final List<Map<String, dynamic>> preferenceMaps = await db.query(
+      "Preferences",
+      where: "userId = ?",
+      whereArgs: [userId],
+    );
+
+    return preferenceMaps.map((map) => map['preference'] as String).toList();
+  }
+
+  static void testTable() async {
+    final db = await _getDB();
+    final result = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
+    print("Tables: $result");
   }
 }

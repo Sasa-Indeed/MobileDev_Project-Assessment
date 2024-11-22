@@ -7,6 +7,7 @@ class GiftDatabaseServices{
 
     static Future<Database> _getDB() async{
       return openDatabase(join(await getDatabasesPath(), DatabaseVersionControl.dbName),
+          version: DatabaseVersionControl.version,
       onCreate: (db, version) async =>
       await db.execute("""CREATE TABLE IF NOT EXISTS Gift (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,8 +20,7 @@ class GiftDatabaseServices{
           imagePath TEXT,
           FOREIGN KEY (eventID) REFERENCES Event(id) ON DELETE CASCADE
       );
-        """),
-        version: DatabaseVersionControl.version
+        """)
       );
     }
 

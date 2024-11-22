@@ -12,7 +12,7 @@ class GiftDetailsPage extends StatefulWidget {
 class _GiftDetailsPageState extends State<GiftDetailsPage> {
   final _formKey = GlobalKey<FormState>();
   final Gift gift = Gift(
-      giftName: "Teddy Bear",
+      name: "Teddy Bear",
       category: "Toys",
       status: "Pending",
       imagePath: "asset/teddyBear.jpg");
