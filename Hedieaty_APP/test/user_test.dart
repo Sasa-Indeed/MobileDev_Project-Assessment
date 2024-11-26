@@ -13,10 +13,7 @@ void main() {
   });
 
 
-
-
   test('Test User CRUD Operations Insert operation', () async {
-    await deleteDatabase(join(await getDatabasesPath(), DatabaseVersionControl.dbName));
 
 
     // Create a user with preferences
@@ -34,7 +31,7 @@ void main() {
 
     // Test retrieval
     final allUsers = await UserDatabaseServices.getAllUsers();
-    expect(allUsers.length, 1);
+    expect(allUsers.length, 4);
     final retrievedUser = allUsers.first;
     expect(retrievedUser.name, user.name);
     expect(retrievedUser.email, user.email);

@@ -4,37 +4,9 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class UserDatabaseServices {
-  static Future<Database> _getDB() async {
-    return openDatabase(
-      join(await getDatabasesPath(), DatabaseVersionControl.dbName),
-      version: DatabaseVersionControl.version,
-      onCreate: (db, version) async {
-        // Create the User table
-        await db.execute("""
-          CREATE TABLE IF NOT EXISTS User (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            phoneNumber TEXT NOT NULL,
-            isNotificationEnabled INTEGER NOT NULL
-          );
-        """);
-
-        // Create the Preferences table
-        await db.execute("""
-          CREATE TABLE IF NOT EXISTS Preferences (
-            userId INTEGER NOT NULL,
-            preference TEXT NOT NULL,
-            PRIMARY KEY (userId, preference),
-            FOREIGN KEY (userId) REFERENCES User(id) ON DELETE CASCADE
-          );
-        """);
-      },
-    );
-  }
 
   static Future<int> insertUser(User user) async {
-    final db = await _getDB();
+    final db = await DatabaseVersionControl.getDB();
 
     // Insert the user
     int userId = await db.insert("User", user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
@@ -53,7 +25,7 @@ class UserDatabaseServices {
 
   // Update a user and their preferences
   static Future<int> updateUser(User user) async {
-    final db = await _getDB();
+    final db = await DatabaseVersionControl.getDB();
 
     // Update the user
     int updated = await db.update("User", user.toJson(), where: "id = ?" ,  whereArgs: [user.id],
@@ -74,12 +46,12 @@ class UserDatabaseServices {
 
   // Delete a user and their preferences
   static Future<int> deleteUser(int userId) async {
-    final db = await _getDB();
+    final db = await DatabaseVersionControl.getDB();
     return await db.delete("User", where: "id = ?", whereArgs: [userId]);
   }
 
   static Future<List<User>> getAllUsers() async {
-    final db = await _getDB();
+    final db = await DatabaseVersionControl.getDB();
 
     // Fetch all users
     final List<Map<String, dynamic>> userMaps = await db.query("User");
@@ -99,7 +71,7 @@ class UserDatabaseServices {
   }
 
   static Future<List<String>> _getUserPreferences(int userId) async {
-    final db = await _getDB();
+    final db = await DatabaseVersionControl.getDB();
 
     final List<Map<String, dynamic>> preferenceMaps = await db.query(
       "Preferences",
@@ -111,7 +83,7 @@ class UserDatabaseServices {
   }
 
   static void testTable() async {
-    final db = await _getDB();
+    final db = await DatabaseVersionControl.getDB();
     final result = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
     print("Tables: $result");
   }
