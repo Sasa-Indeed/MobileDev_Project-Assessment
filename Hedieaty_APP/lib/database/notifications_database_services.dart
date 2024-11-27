@@ -39,6 +39,10 @@ class NotificationDatabaseServices {
 
     final List<Map<String, dynamic>> notificationMaps = await db.query("Notifications");
 
+    if(notificationMaps.isEmpty){
+      return [];
+    }
+
     return List.generate(
       notificationMaps.length,
           (index) => Notifications.fromJson(notificationMaps[index]),
