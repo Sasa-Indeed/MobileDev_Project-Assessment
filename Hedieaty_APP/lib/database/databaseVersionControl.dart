@@ -15,7 +15,8 @@ class DatabaseVersionControl{
           CREATE TABLE IF NOT EXISTS User (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            email TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
             phoneNumber TEXT NOT NULL,
             isNotificationEnabled INTEGER NOT NULL
           );
@@ -95,6 +96,10 @@ class DatabaseVersionControl{
 
       },
     );
+  }
+
+  static Future<void> deleteDBs() async{
+    await deleteDatabase(join(await getDatabasesPath(), _dbName));
   }
 
 }

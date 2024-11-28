@@ -3,6 +3,7 @@ class User{
   final String name;
   List<String> preferences;
   final String email;
+  final String password;
   final String phoneNumber;
   final bool isNotificationEnabled;
 
@@ -10,6 +11,7 @@ class User{
   User({required this.name,
         required this.preferences,
         required this.email,
+        required this.password,
         required this.phoneNumber,
         required this.isNotificationEnabled,
         this.id});
@@ -19,6 +21,7 @@ class User{
       name: json['name'],
       preferences: [],
       email: json['email'],
+      password: json['password'],
       phoneNumber: json['phoneNumber'],
       isNotificationEnabled: json['isNotificationEnabled'] == 1,
   );
@@ -27,6 +30,7 @@ class User{
     'id': id,
     'name': name,
     'email': email,
+    'password': password,
     'phoneNumber': phoneNumber,
     'isNotificationEnabled': isNotificationEnabled ? 1 : 0,
   };

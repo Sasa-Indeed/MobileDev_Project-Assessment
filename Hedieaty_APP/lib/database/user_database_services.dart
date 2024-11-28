@@ -70,6 +70,34 @@ class UserDatabaseServices {
     return users;
   }
 
+  Future<User?> getUserByEmail(String email) async {
+    final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
+
+    final List<Map<String, dynamic>> userResult = await db.query(
+      'User',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+
+    if (userResult.isNotEmpty) {
+      final userData = userResult.first;
+
+      final List<String> preferences = await _getUserPreferences(userData['id']);
+
+      return User(
+        id: userData['id'],
+        name: userData['name'],
+        preferences: preferences,
+        email: userData['email'],
+        password: userData['password'],
+        phoneNumber: userData['phone_number'],
+        isNotificationEnabled: userData['is_notification_enabled'] == 1, // Assuming it's stored as 0/1
+      );
+    }
+
+    return null;
+  }
+
   static Future<List<String>> _getUserPreferences(int userId) async {
     final db = await DatabaseVersionControl.getDB();
 

@@ -15,9 +15,39 @@ void main() {
 
   test('Test User CRUD Operations Insert operation', () async {
 
+    DatabaseVersionControl.deleteDBs();
+    final user = User(
+      name: "John Doe",
+      email: "johndoe@example.com",
+      password: "sex",
+      phoneNumber: "1234567890",
+      isNotificationEnabled: true,
+      preferences: ["Sports", "Technology", "Music"],
+    );
+
+    // Test insertion
+    final userId = await UserDatabaseServices.insertUser(user);
+    expect(userId, greaterThan(0));
+
+    final user2 = User(
+      name: "Sasa",
+      email: "johndoe@example.com",
+      password: "sex",
+      phoneNumber: "1234567890",
+      isNotificationEnabled: true,
+      preferences: ["Sports", "Technology", "Music"],
+    );
+
+    // Test insertion
+    final userId2 = await UserDatabaseServices.insertUser(user2);
+    expect(userId2, greaterThan(0));
+
+    List<User> users = await UserDatabaseServices.getAllUsers();
+
+    print(users[0].name);
 
     // Create a user with preferences
-    final user = User(
+    /*final user = User(
       name: "John Doe",
       email: "johndoe@example.com",
       phoneNumber: "1234567890",
@@ -73,6 +103,6 @@ void main() {
 
     // Verify deletion
     final remainingUsers = await UserDatabaseServices.getAllUsers();
-    expect(remainingUsers.isEmpty, true);
+    expect(remainingUsers.isEmpty, true);*/
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/custom_widgets/colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -56,6 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
                             fontFamily: "playWrite",
+                            color: MyColors.orange,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -112,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(30),
-                              gradient: const LinearGradient(colors: [Colors.blue, Colors.purple]),
+                              gradient: const LinearGradient(colors: [MyColors.orange, MyColors.blue]),
                             ),
                             child: ElevatedButton(
                               onPressed: () => _loginUser(context),
@@ -123,7 +125,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: const Text(
                                 "Login",
-                                style: TextStyle(color: Colors.white),
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    fontFamily: "poppins"
+                                ),
                               ),
                             ),
                           ),
@@ -144,8 +151,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: Alignment.center,
                           child: OutlinedButton.icon(
                             onPressed: () {},
-                            icon: const Icon(Icons.g_mobiledata, color: Colors.blueAccent),
-                            label: const Text("Sign in with Google"),
+                            icon: const Icon(Icons.g_mobiledata, color: Colors.blueAccent, size: 25),
+                            label: const Text(
+                              "Sign in with Google",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15
+                              ),
+                            ),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
                               side: const BorderSide(color: Colors.blueAccent),
