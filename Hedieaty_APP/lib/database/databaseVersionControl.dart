@@ -102,4 +102,8 @@ class DatabaseVersionControl{
     await deleteDatabase(join(await getDatabasesPath(), _dbName));
   }
 
+  static Future<void> initializeDatabase() async{
+    openDatabase(join(await getDatabasesPath(), _dbName),);
+  }
+
 }

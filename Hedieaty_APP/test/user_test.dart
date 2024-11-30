@@ -16,6 +16,7 @@ void main() {
   test('Test User CRUD Operations Insert operation', () async {
 
     DatabaseVersionControl.deleteDBs();
+
     final user = User(
       name: "John Doe",
       email: "johndoe@example.com",
@@ -31,7 +32,7 @@ void main() {
 
     final user2 = User(
       name: "Sasa",
-      email: "johndoe@example.com",
+      email: "jondoe@example.com",
       password: "sex",
       phoneNumber: "1234567890",
       isNotificationEnabled: true,
@@ -42,9 +43,9 @@ void main() {
     final userId2 = await UserDatabaseServices.insertUser(user2);
     expect(userId2, greaterThan(0));
 
-    List<User> users = await UserDatabaseServices.getAllUsers();
+    /*List<User> users = await UserDatabaseServices.getAllUsers();
 
-    print(users[0].name);
+    print(users[0].name);*/
 
     // Create a user with preferences
     /*final user = User(

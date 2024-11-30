@@ -23,20 +23,20 @@ class _ProfileScreen extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
-          title: const Padding(
-              padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
-              child: Text(
-                "Profile",
-                style: TextStyle(
-                  color: MyColors.gray,
-                  fontFamily: "playWrite",
-                  fontSize: 50,
-                ),
-              ),
+        title: const Padding(
+          padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+          child: Text(
+            "Profile",
+            style: TextStyle(
+              color: MyColors.gray,
+              fontFamily: "playWrite",
+              fontSize: 50,
+            ),
           ),
-          centerTitle: true,
-          backgroundColor: MyColors.navy,
         ),
+        centerTitle: true,
+        backgroundColor: MyColors.navy,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -45,11 +45,11 @@ class _ProfileScreen extends State<ProfileScreen> {
             // Profile Section
             Row(
               children: [
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 40,
                   backgroundImage: AssetImage('asset/man.jpg'),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -57,37 +57,35 @@ class _ProfileScreen extends State<ProfileScreen> {
                       username,
                       style: TextStyle(fontSize: 20, color: Colors.grey[600]),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       "$firstName $lastName",
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 24, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 4),
-                    Text(email, style: TextStyle(color: Colors.grey)),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 4),
+                    Text(email, style: const TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 8),
                     ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: MyColors.navy,
-                        ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MyColors.navy,
+                      ),
                       onPressed: () {
-                        // Uncomment to navigate to update page
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => UpdateProfilePage(
-                              firstName: firstName,
-                              lastName: lastName,
-                              email: email,
-                            )
-                          ),
+                          MaterialPageRoute(
+                              builder: (context) => UpdateProfilePage(
+                                firstName: firstName,
+                                lastName: lastName,
+                                email: email,
+                              )),
                         );
                       },
-                      child: const Text(
-                          "Update Profile",
+                      child: const Text("Update Profile",
                           style: TextStyle(
                             fontFamily: "playWrite",
                             color: MyColors.orange,
-                          )
-                      ),
+                          )),
                     ),
                   ],
                 ),
@@ -97,10 +95,7 @@ class _ProfileScreen extends State<ProfileScreen> {
             // Notification Settings
             const Text(
               "Notification Settings",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SwitchListTile(
               activeTrackColor: MyColors.orange,
@@ -109,23 +104,18 @@ class _ProfileScreen extends State<ProfileScreen> {
               onChanged: (bool value) {
                 setState(() {
                   _notification = value;
-                  if(value){
-                    iconImage = Icons.notifications_active_rounded;
-                  }else{
-                    iconImage = Icons.notifications_off_rounded;
-                  }
+                  iconImage = value
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_off_rounded;
                 });
               },
-              secondary:  Icon(iconImage),
+              secondary: Icon(iconImage),
             ),
             const SizedBox(height: 24),
             // Events Section
             const Text(
               "My Events",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Expanded(
               child: ListView.builder(
@@ -145,18 +135,18 @@ class _ProfileScreen extends State<ProfileScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: MyColors.navy,
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 30, vertical: 15),
                 ),
                 onPressed: () {
                   // Add routing logic here for pledged gifts
                 },
                 child: const Text("My Pledged Gifts",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontFamily: "playWrite",
-                    color: MyColors.orange,
-                  )
-                ),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontFamily: "playWrite",
+                      color: MyColors.orange,
+                    )),
               ),
             ),
           ],

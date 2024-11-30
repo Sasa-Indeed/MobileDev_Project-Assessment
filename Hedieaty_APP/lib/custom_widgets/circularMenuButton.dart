@@ -3,55 +3,51 @@ import 'package:circular_menu/circular_menu.dart';
 import 'package:flutter/cupertino.dart';
 import 'colors.dart';
 
-
-class circularMenuButton extends StatefulWidget{
-  const circularMenuButton({super.key});
+class CircularMenuButton extends StatefulWidget {
+  const CircularMenuButton({super.key});
 
   @override
-  State<circularMenuButton> createState() => _circularMenuButton();
-
+  State<CircularMenuButton> createState() => _CircularMenuButtonState();
 }
 
-class _circularMenuButton extends State<circularMenuButton>{
-  final circularMenu = CircularMenu(
+class _CircularMenuButtonState extends State<CircularMenuButton> {
+  void _goToProfilePage() {
+    Navigator.pushNamed(context, '/ProfilePage');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CircularMenu(
       alignment: Alignment.bottomCenter,
       toggleButtonColor: MyColors.orange,
       items: [
         CircularMenuItem(
-            color: MyColors.navy,
-            icon: Icons.add,
-            onTap: () {
-                // callback
-              print("Add Friends");
-            }),
+          color: MyColors.navy,
+          icon: Icons.person_2_outlined,
+          onTap: _goToProfilePage, // Uses the correct context
+        ),
         CircularMenuItem(
-            color: MyColors.navy,
-            icon: Icons.search,
-            onTap: () {
-              //callback
-              print("Search Friends");
-        }),
+          color: MyColors.navy,
+          icon: Icons.add,
+          onTap: () {
+            print("Add Friends");
+          },
+        ),
         CircularMenuItem(
-            color: MyColors.navy,
-            icon: CupertinoIcons.gift,
-            onTap: () {
-             //callback
-              print("Add Gift List");
-        }),
+          color: MyColors.navy,
+          icon: CupertinoIcons.gift,
+          onTap: () {
+            print("Add Gift List");
+          },
+        ),
         CircularMenuItem(
-            color: MyColors.navy,
-            icon: CupertinoIcons.calendar_badge_plus,
-            onTap: () {
-              //callback
-              print("Add Event");
-            }),
-      ]
-  );
-
-
-  @override
-  Widget build(BuildContext context) {
-    return circularMenu;
+          color: MyColors.navy,
+          icon: CupertinoIcons.calendar_badge_plus,
+          onTap: () {
+            print("Add Event");
+          },
+        ),
+      ],
+    );
   }
-
 }

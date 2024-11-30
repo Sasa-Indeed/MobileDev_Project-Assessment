@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'package:hedieaty_app/models/user.dart';
+import 'package:hedieaty_app/models/user.dart';
+import 'package:hedieaty_app/database/user_database_services.dart';
+import 'package:hedieaty_app/database/databaseVersionControl.dart';
+
+
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,10 +20,67 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
-  void _loginUser(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Login functionality not implemented.")),
+  Future<void> initializeDatabase() async {
+    // Your database initialization logic
+    await DatabaseVersionControl.initializeDatabase();
+    print("Database connected!");
+  }
+
+
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(email);
+  }
+
+  void _showPopup(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
     );
+  }
+
+  void _loginUser(BuildContext context) async {
+    // Validate email format
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (!_isValidEmail(email)) {
+      _showPopup(context, "Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      // Fetch user from database
+      User? user = await UserDatabaseServices.getUserByEmail(email, password);
+
+      if (user == null) {
+        // User not found
+        _showPopup(context, "Login Failed", "Incorrect email or password.");
+      } else {
+        // Login successful, navigate to Home
+        Navigator.pushNamed(context, '/Home');
+      }
+    } catch (e) {
+      // Handle any errors that occur during database operations
+      _showPopup(context, "Error", "An error occurred while logging in. Please try again.");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize database connection when the widget is first created
+    initializeDatabase();
   }
 
   @override

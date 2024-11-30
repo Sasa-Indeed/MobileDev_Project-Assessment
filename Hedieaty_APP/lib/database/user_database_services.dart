@@ -1,15 +1,20 @@
 import 'package:hedieaty_app/database/databaseVersionControl.dart';
 import 'package:hedieaty_app/models/user.dart';
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class UserDatabaseServices {
 
   static Future<int> insertUser(User user) async {
     final db = await DatabaseVersionControl.getDB();
-
+    int userId = -1;
     // Insert the user
-    int userId = await db.insert("User", user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+    try{
+      userId = await db.insert("User", user.toJson());
+    } on DatabaseException catch(e){
+      print("Error");
+      return -1;
+    }
+
 
     // Insert preferences
     for (String preference in user.preferences) {
@@ -70,13 +75,13 @@ class UserDatabaseServices {
     return users;
   }
 
-  Future<User?> getUserByEmail(String email) async {
+  static Future<User?> getUserByEmail(String email, String password) async {
     final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
 
     final List<Map<String, dynamic>> userResult = await db.query(
       'User',
-      where: 'email = ?',
-      whereArgs: [email],
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
     );
 
     if (userResult.isNotEmpty) {
