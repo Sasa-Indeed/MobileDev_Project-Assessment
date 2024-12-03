@@ -16,7 +16,7 @@ void main() {
         routes: {
           "/Home"             : (context) => HomeScreen(),
           "/ProfilePage"      : (context) => ProfileScreen(),
-          //"/GiftPage"         : (context) => GiftListPage(),
+          "/GiftPage"         : (context) => GiftListPage(),
           "/EventListPage"    : (context) => EventListPage(),
           //"/GiftDetailsPage"  : (context) => GiftDetailsPage(),
           "/PledgedGiftsPage" : (context) => PledgedGiftsPage(),

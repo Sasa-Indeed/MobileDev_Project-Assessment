@@ -39,8 +39,9 @@ class DatabaseVersionControl{
             name TEXT NOT NULL,
             date TEXT NOT NULL,
             location TEXT NOT NULL,
+            category TEXT NOT NULL,
             description TEXT NOT NULL,
-            userID TEXT NOT NULL,
+            userID INTEGER NOT NULL,
             FOREIGN KEY (userId) REFERENCES User(id) ON DELETE CASCADE
           );
         """);
@@ -103,7 +104,7 @@ class DatabaseVersionControl{
   }
 
   static Future<void> initializeDatabase() async{
-    openDatabase(join(await getDatabasesPath(), _dbName),);
+    await getDB();
   }
 
 }

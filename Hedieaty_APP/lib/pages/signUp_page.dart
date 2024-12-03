@@ -15,13 +15,13 @@ class _SignupScreenState extends State<SignupScreen> {
     "Books",
     "Clothes",
     "Electronics",
-    "Experiences ",
+    "Experiences",
     "Food/Gourmet Items",
     "Gift Cards",
     "Home Decor",
     "Jewelry",
     "Personal Care Products",
-    "Subscriptions ",
+    "Subscriptions",
     "Toys/Games"
   ];
 
@@ -89,12 +89,13 @@ class _SignupScreenState extends State<SignupScreen> {
     );
 
     int userId = await UserDatabaseServices.insertUser(user);
+    user.id = userId;
 
     if(userId < 0){
       _showPopup(context, "User Already Exists", "Please enter a new email address or sign in.");
       return;
     }else{
-      Navigator.pushNamed(context, '/Home');
+      Navigator.pushNamed(context, '/Home', arguments: user);
     }
 
   }

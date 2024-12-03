@@ -77,7 +77,6 @@ class UserDatabaseServices {
 
   static Future<User?> getUserByEmail(String email, String password) async {
     final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
-
     final List<Map<String, dynamic>> userResult = await db.query(
       'User',
       where: 'email = ? AND password = ?',
@@ -89,15 +88,10 @@ class UserDatabaseServices {
 
       final List<String> preferences = await _getUserPreferences(userData['id']);
 
-      return User(
-        id: userData['id'],
-        name: userData['name'],
-        preferences: preferences,
-        email: userData['email'],
-        password: userData['password'],
-        phoneNumber: userData['phone_number'],
-        isNotificationEnabled: userData['is_notification_enabled'] == 1, // Assuming it's stored as 0/1
-      );
+      User user = User.fromJson(userData);
+      user.preferences = preferences;
+
+      return user;
     }
 
     return null;

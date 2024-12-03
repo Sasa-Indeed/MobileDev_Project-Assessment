@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
-import 'package:intl/intl.dart'; // Import for date formatting
+import 'package:hedieaty_app/database/event_database_services.dart';
+import 'package:hedieaty_app/models/event.dart';
+import 'package:intl/intl.dart';
 
-class Event {
-  String name;
-  String category;
-  DateTime date;
-  String status; // "Upcoming", "Current", "Past"
-
-  Event({
-    required this.name,
-    required this.category,
-    required this.date,
-    required this.status,
-  });
-}
+enum EventStatus { Past, Current, Upcoming }
 
 class EventListPage extends StatefulWidget {
   const EventListPage({super.key});
@@ -24,16 +14,38 @@ class EventListPage extends StatefulWidget {
 }
 
 class _EventListPageState extends State<EventListPage> {
-  List<Event> events = [
-    Event(name: 'Sarah\'s Birthday', category: 'Birthday', date: DateTime.now().add(Duration(days: 10)), status: 'Upcoming'),
-    Event(name: 'Wedding', category: 'Family', date: DateTime.now(), status: 'Current'),
-    Event(name: 'Reunion', category: 'Friends', date: DateTime.now().subtract(Duration(days: 5)), status: 'Past'),
-  ];
-
+  List<Event> events = [];
+  int userID = 0;
   String selectedSortCriteria = 'name';
-  DateTime? newDate;
+  bool isLoading = true;
 
-  // Function to sort events
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (userID == 0) {
+      // Ensure we only set the userID once
+      userID = ModalRoute.of(context)!.settings.arguments as int;
+      fetchEvents();
+    }
+  }
+
+  Future<void> fetchEvents() async {
+    setState(() {
+      isLoading = true;
+    });
+    events = await EventDatabaseServices.getEventsByUser(userID);
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  EventStatus getEventStatus(DateTime eventDate) {
+    final currentDate = DateTime.now();
+    if (eventDate.isBefore(currentDate)) return EventStatus.Past;
+    if (eventDate.isAtSameMomentAs(currentDate) || eventDate.isAfter(currentDate)) return EventStatus.Current;
+    return EventStatus.Upcoming;
+  }
+
   void _sortEvents(String criteria) {
     setState(() {
       if (criteria == 'name') {
@@ -41,92 +53,181 @@ class _EventListPageState extends State<EventListPage> {
       } else if (criteria == 'category') {
         events.sort((a, b) => a.category.compareTo(b.category));
       } else if (criteria == 'status') {
-        events.sort((a, b) => a.status.compareTo(b.status));
+        events.sort((a, b) {
+          EventStatus statusA = getEventStatus(a.date);
+          EventStatus statusB = getEventStatus(b.date);
+          return statusA.index.compareTo(statusB.index);
+        });
       }
     });
   }
 
-  // Function to delete an event
-  void _deleteEvent(int index) {
-    setState(() {
-      events.removeAt(index);
-    });
+  void _deleteEvent(Event event) async {
+    await EventDatabaseServices.deleteEvent(event.id!);
+    fetchEvents();
   }
 
-  // Function to add a new event (this is just a placeholder)
-  void _addEvent() {
+  void _editEvent(Event event) {
     showDialog(
-        context: context,
-        builder: (context) {
-          String newName = '';
-          String newCategory = '';
-          String newStatus = '';
-          return AlertDialog(
-            title: const Text("Add New Event"),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  decoration: const InputDecoration(hintText: "Event Name"),
-                  onChanged: (value) => newName = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(hintText: "Category"),
-                  onChanged: (value) => newCategory = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(hintText: "Status"),
-                  onChanged: (value) => newStatus = value,
-                ),
-                TextButton(
-                    child:  Text(newDate != null ? "Date: ${_formatDateTime(newDate!)}" : "Pick a Date"),
-                    onPressed: () async {
-                      DateTime? pickedDate = await _pickDateTime(context);
-                      setState(() {
-                        if(pickedDate != null){
-                          newDate = pickedDate;
-                        }else{
-                          newDate = DateTime.now();
-                        }
-                      });
-                      //(context as Element).markNeedsBuild();
-                    },
-                )
-              ],
-            ),
-            actions: [
-              TextButton(
-                child: const Text("Cancel"),
-                onPressed: () => Navigator.of(context).pop(),
+      context: context,
+      builder: (context) {
+        String updatedName = event.name;
+        String updatedLocation = event.location;
+        String updatedCategory = event.category;
+        String updatedDescription = event.description;
+        DateTime updatedDate = event.date;
+
+        return AlertDialog(
+          title: const Text("Edit Event"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(hintText: "Event Name"),
+                controller: TextEditingController(text: event.name),
+                onChanged: (value) => updatedName = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: "Location"),
+                controller: TextEditingController(text: event.location),
+                onChanged: (value) => updatedLocation = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: "Category"),
+                controller: TextEditingController(text: event.category),
+                onChanged: (value) => updatedCategory = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: "Description"),
+                controller: TextEditingController(text: event.description),
+                onChanged: (value) => updatedDescription = value,
               ),
               TextButton(
-                child: const Text("Add"),
-                onPressed: () {
-                  if (newName.isNotEmpty && newCategory.isNotEmpty && newCategory.isNotEmpty && (newDate != null)) {
+                child: Text("Date: ${_formatDateTime(updatedDate)}"),
+                onPressed: () async {
+                  DateTime? pickedDate = await _pickDateTime(context);
+                  if (pickedDate != null) {
                     setState(() {
-                        events.add(Event(name: newName, category: newCategory, status: newStatus, date: newDate!));
+                      updatedDate = pickedDate;
                     });
-                    Navigator.of(context).pop();
                   }
                 },
               ),
             ],
-          );
-        });
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text("Save"),
+              onPressed: () async {
+                if (updatedName.isNotEmpty &&
+                    updatedLocation.isNotEmpty &&
+                    updatedCategory.isNotEmpty &&
+                    updatedDescription.isNotEmpty) {
+                  await EventDatabaseServices.updateEvent(Event(
+                    id: event.id,
+                    name: updatedName,
+                    location: updatedLocation,
+                    category: updatedCategory,
+                    description: updatedDescription,
+                    date: updatedDate,
+                    userID: userID,
+                  ));
+                  fetchEvents();
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  // Function to edit an event (this is just a placeholder)
-  void _editEvent(int index) {
-    // Add your code for editing events here
+  void _addEvent() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String newName = '';
+        String newLocation = '';
+        String newCategory = '';
+        String newDescription = '';
+        DateTime? newDate;
+
+        return AlertDialog(
+          title: const Text("Add New Event"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: const InputDecoration(hintText: "Event Name"),
+                onChanged: (value) => newName = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: "Location"),
+                onChanged: (value) => newLocation = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: "Category"),
+                onChanged: (value) => newCategory = value,
+              ),
+              TextField(
+                decoration: const InputDecoration(hintText: "Description"),
+                onChanged: (value) => newDescription = value,
+              ),
+              TextButton(
+                child: Text(newDate != null ? "Date: ${_formatDateTime(newDate!)}" : "Pick a Date"),
+                onPressed: () async {
+                  DateTime? pickedDate = await _pickDateTime(context);
+                  setState(() {
+                    newDate = pickedDate ?? DateTime.now();
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text("Add"),
+              onPressed: () {
+                if (newName.isNotEmpty &&
+                    newLocation.isNotEmpty &&
+                    newCategory.isNotEmpty &&
+                    newDescription.isNotEmpty &&
+                    newDate != null) {
+                  EventDatabaseServices.insertEvent(
+                    Event(
+                      name: newName,
+                      date: newDate!,
+                      location: newLocation,
+                      category: newCategory,
+                      description: newDescription,
+                      userID: userID,
+                    ),
+                  );
+                  fetchEvents();
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  // Function to format date and time
   String _formatDateTime(DateTime dateTime) {
     return DateFormat('dd-MM-yyyy – kk:mm').format(dateTime);
   }
 
   Future<DateTime?> _pickDateTime(BuildContext context) async {
-    // Step 1: Pick the date
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -134,30 +235,23 @@ class _EventListPageState extends State<EventListPage> {
       lastDate: DateTime(2100),
     );
 
-    // If no date is selected, return null
     if (pickedDate == null) return null;
 
-    // Step 2: Pick the time
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
 
-    // If no time is selected, return null
     if (pickedTime == null) return null;
 
-    // Step 3: Combine the picked date and time into a DateTime object
-    final DateTime combinedDateTime = DateTime(
+    return DateTime(
       pickedDate.year,
       pickedDate.month,
       pickedDate.day,
       pickedTime.hour,
       pickedTime.minute,
     );
-
-    return combinedDateTime;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -165,105 +259,98 @@ class _EventListPageState extends State<EventListPage> {
       backgroundColor: MyColors.gray,
       appBar: AppBar(
         title: const Text(
-            'Event List',
-            style: TextStyle(
-                color: MyColors.gray,
-                fontFamily: "playWrite",
-                fontSize: 30
-            ),
+          'Event List',
+          style: TextStyle(
+            color: MyColors.gray,
+            fontFamily: "playWrite",
+            fontSize: 30,
           ),
+        ),
         backgroundColor: MyColors.navy,
         actions: [
           PopupMenuButton<String>(
             onSelected: _sortEvents,
-            iconColor: MyColors.gray,
-            color: MyColors.navy,
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(20),
-                )
-            ),
-            itemBuilder: (BuildContext context) {
-              return {'name', 'category', 'status'}.map((String choice) {
+            itemBuilder: (context) {
+              return {'name', 'category', 'status'}.map((choice) {
                 return PopupMenuItem<String>(
                   value: choice,
-                  child: Text(
-                      'Sort by $choice',
-                      style: const TextStyle(
-                        color: MyColors.orange,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                      ),
-                  ),
+                  child: Text("Sort by $choice"),
                 );
               }).toList();
             },
           ),
         ],
       ),
-      body: ListView.builder(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : events.isEmpty
+          ? Center(
+        child: Image.asset(
+          'asset/images/no_events.jpeg',
+          fit: BoxFit.contain,
+        ),
+      )
+          : ListView.builder(
         itemCount: events.length,
         itemBuilder: (context, index) {
           return Card(
-              shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(20),
-                  )
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(20),
               ),
-              child: ListTile(
-                shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(20),
-                    )
+            ),
+            child: ListTile(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(20),
                 ),
-                iconColor: MyColors.orange,
-                minVerticalPadding: 10,
-                tileColor: MyColors.blue,
-                textColor: MyColors.orange,
-                title: Text(events[index].name),
-                titleTextStyle: const TextStyle(
-                    color: MyColors.gray,
-                    fontFamily: "playWrite",
-                    fontSize: 30,
+              ),
+              iconColor: MyColors.orange,
+              minVerticalPadding: 10,
+              tileColor: MyColors.blue,
+              textColor: MyColors.orange,
+              title: Text(
+                events[index].name,
+                style: const TextStyle(
+                  color: MyColors.gray,
+                  fontFamily: "playWrite",
+                  fontSize: 30,
                 ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Category: ${events[index].category}'),
-                    Text('Status: ${events[index].status}'),
-                    Text('Date: ${_formatDateTime(events[index].date)}'), // Display date and time
-                  ],
-                ),
-                subtitleTextStyle: const  TextStyle(
-                    color: MyColors.gray,
-                    fontFamily: "poppins",
-                    fontSize: 15,
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _editEvent(index),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _deleteEvent(index),
-                    ),
-                  ],
-                ),
-              )
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Date: ${_formatDateTime(events[index].date)}'),
+                  Text('Location: ${events[index].location}'),
+                  Text('Category: ${events[index].category}'),
+                  Text('Description: ${events[index].description}'),
+                ],
+              ),
+              subtitleTextStyle: const TextStyle(
+                color: MyColors.gray,
+                fontFamily: "poppins",
+                fontSize: 15,
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _editEvent(events[index]),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _deleteEvent(events[index]),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addEvent,
-        backgroundColor: MyColors.navy,
-        tooltip: 'Add Event',
-        child: const Icon(
-          Icons.add,
-          color: MyColors.orange,
-        ),
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -21,13 +21,13 @@ class GiftDatabaseServices{
       return await db.delete("Gift", where: "id = ?" ,whereArgs: [gift.id]);
     }
 
-    static Future<List<Gift>?> getAllGifts() async{
+    static Future<List<Gift>> getAllGifts() async{
       final db = await DatabaseVersionControl.getDB();
 
       final List<Map<String, dynamic>> maps = await db.query("Gift");
 
       if(maps.isEmpty){
-        return null;
+        return [];
       }
       
       return List.generate(maps.length, (index) => Gift.fromJson(maps[index]));

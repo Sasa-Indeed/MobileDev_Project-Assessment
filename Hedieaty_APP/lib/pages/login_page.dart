@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/models/user.dart';
-import 'package:hedieaty_app/models/user.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
 import 'package:hedieaty_app/database/databaseVersionControl.dart';
 
@@ -21,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   Future<void> initializeDatabase() async {
-    // Your database initialization logic
+    await DatabaseVersionControl.deleteDBs();
     await DatabaseVersionControl.initializeDatabase();
     print("Database connected!");
   }
@@ -67,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _showPopup(context, "Login Failed", "Incorrect email or password.");
       } else {
         // Login successful, navigate to Home
-        Navigator.pushNamed(context, '/Home');
+        Navigator.pushNamed(context, '/Home', arguments: user);
       }
     } catch (e) {
       // Handle any errors that occur during database operations

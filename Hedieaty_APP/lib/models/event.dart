@@ -3,12 +3,14 @@ class Event{
   final String name;
   final DateTime date;
   final String location;
+  final String category;
   final String description;
-  final String userID;
+  final int userID;
 
   Event({required this.name,
          required this.date,
          required this.location,
+         required this.category,
          required this.description,
          required this.userID,
          this.id});
@@ -18,6 +20,7 @@ class Event{
       name: json['name'],
       date: DateTime.parse(json['date']),
       location: json['location'],
+      category: json['category'],
       description: json['description'],
       userID: json['userID']
   );
@@ -27,6 +30,7 @@ class Event{
     'name': name,
     'date': date.toIso8601String(),
     'location': location,
+    'category': category,
     'description': description,
     'userID': userID
   };

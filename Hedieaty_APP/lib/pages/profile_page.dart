@@ -139,7 +139,7 @@ class _ProfileScreen extends State<ProfileScreen> {
                       horizontal: 30, vertical: 15),
                 ),
                 onPressed: () {
-                  // Add routing logic here for pledged gifts
+                  Navigator.pushNamed(context, '/PledgedGiftsPage');
                 },
                 child: const Text("My Pledged Gifts",
                     style: TextStyle(

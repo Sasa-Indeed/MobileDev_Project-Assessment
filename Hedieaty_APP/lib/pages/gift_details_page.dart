@@ -18,8 +18,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
       status: "Pending",
       imagePath: "asset/teddyBear.jpg");
 
- */
-/* @override
+ @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -30,7 +29,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
         });
       }
     });
-  }*//*
+  }
 
 
   // Function to display dialog to input image path

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'package:hedieaty_app/models/user.dart';
 import '../custom_widgets/circularMenuButton.dart';
 import '../custom_widgets/friend.dart';
 import 'package:circular_menu/circular_menu.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreen extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final User user = ModalRoute.of(context)!.settings.arguments as User;
     return  MaterialApp(
       title: "Home",
       home: Scaffold(
@@ -33,15 +35,9 @@ class _HomeScreen extends State<HomeScreen> {
           centerTitle: true,
           backgroundColor: MyColors.navy,
         ),
-        body: Column(
+        body: const Column(
           children: [
-            const Friends(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/ProfilePage');
-              },
-              child: Text('Go to Profile'),
-            ),
+             Friends(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
           ],
         ),
         floatingActionButton: CircularMenu(
@@ -73,7 +69,7 @@ class _HomeScreen extends State<HomeScreen> {
               color: MyColors.navy,
               icon: CupertinoIcons.calendar_badge_plus,
               onTap: () {
-                print("Add Event");
+                Navigator.pushNamed(context, '/EventListPage', arguments: user.id);
               },
             ),
           ],
