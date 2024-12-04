@@ -30,13 +30,13 @@ class EventDatabaseServices{
   static Future<List<Event>> getAllEvents() async{
     final db = await DatabaseVersionControl.getDB();
 
-    final List<Map<String, dynamic>> maps = await db.query("Event");
+    final List<Map<String, dynamic>> eventsMap = await db.query("Event");
 
-    if(maps.isEmpty){
+    if(eventsMap.isEmpty){
       return [];
     }
 
-    return List.generate(maps.length, (index) => Event.fromJson(maps[index]));
+    return List.generate(eventsMap.length, (index) => Event.fromJson(eventsMap[index]));
   }
 
   // Get all events for a user
@@ -73,4 +73,32 @@ class EventDatabaseServices{
 
     return Event.fromJson(eventMaps.first);
   }
+
+  static Future<List<Event>> getUpcomingEvents() async {
+    final db = await DatabaseVersionControl.getDB();
+    final currentDate = DateTime.now();
+    List<Event> upcomingEvents = [];
+    DateTime dateTime;
+
+    final List<Map<String, dynamic>> eventsMap = await db.query("Event");
+
+    if(eventsMap.isEmpty){
+      return [];
+    }
+
+    List<Event> events = List.generate(
+      eventsMap.length,
+          (index) => Event.fromJson(eventsMap[index]),
+    );
+
+    for(Event event in events){
+      dateTime = DateTime(event.date.year, event.date.month, event.date.day);
+      if(dateTime.isAfter(currentDate)){
+        upcomingEvents.add(event);
+      }
+    }
+
+    return upcomingEvents;
+  }
+
 }

@@ -34,4 +34,9 @@ class Event{
     'description': description,
     'userID': userID
   };
+
+  @override
+  String toString() {
+    return "{ID: $id Name: $name Date: $date Location: $location Category: $category Description: $description UserID: $userID}";
+  }
 }

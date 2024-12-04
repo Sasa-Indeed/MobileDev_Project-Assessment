@@ -62,7 +62,7 @@ class _HomeScreen extends State<HomeScreen> {
               color: MyColors.navy,
               icon: CupertinoIcons.gift,
               onTap: () {
-                print("Add Gift List");
+                Navigator.pushNamed(context, '/GiftListPage');
               },
             ),
             CircularMenuItem(

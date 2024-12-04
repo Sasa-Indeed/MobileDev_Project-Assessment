@@ -31,7 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
   circular_menu : ^4.0.0
-  intl: ^0.17.0
+  intl: ^0.18.0
+  table_calendar: ^3.0.9
 
 
 

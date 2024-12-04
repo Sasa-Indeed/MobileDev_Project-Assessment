@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   Future<void> initializeDatabase() async {
-    await DatabaseVersionControl.deleteDBs();
+    //await DatabaseVersionControl.deleteDBs();
     await DatabaseVersionControl.initializeDatabase();
     print("Database connected!");
   }
