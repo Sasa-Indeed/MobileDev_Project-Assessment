@@ -18,7 +18,7 @@ void main() {
           "/ProfilePage"      : (context) => ProfileScreen(),
           "/GiftListPage"         : (context) => GiftListPage(),
           "/EventListPage"    : (context) => EventListPage(),
-          //"/GiftDetailsPage"  : (context) => GiftDetailsPage(),
+          "/GiftDetailsPage"  : (context) => GiftDetailsPage(),
           "/PledgedGiftsPage" : (context) => PledgedGiftsPage(),
           '/login': (context) => LoginScreen(),
           '/signup': (context) => SignupScreen(),

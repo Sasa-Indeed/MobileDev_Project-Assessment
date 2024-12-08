@@ -389,7 +389,11 @@ class _EventListPageState extends State<EventListPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addEvent,
-        child: const Icon(Icons.add),
+        backgroundColor: MyColors.navy,
+        child: const Icon(
+          Icons.add,
+          color: MyColors.orange,
+        ),
       ),
     );
   }

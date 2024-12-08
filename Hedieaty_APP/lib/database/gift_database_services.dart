@@ -1,6 +1,5 @@
 import 'package:hedieaty_app/database/databaseVersionControl.dart';
 import 'package:hedieaty_app/models/gift.dart';
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class GiftDatabaseServices{

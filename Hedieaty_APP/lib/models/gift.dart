@@ -35,4 +35,18 @@ class Gift {
   'imagePath': imagePath
   };
 
+  Gift copyWith({int? id, String? name, String? description, String? category,
+    double? price, String? status, int? eventID, String? imagePath,}) {
+    return Gift(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      eventID: eventID ?? this.eventID,
+      imagePath: imagePath ?? this.imagePath,
+    );
+  }
+
 }
