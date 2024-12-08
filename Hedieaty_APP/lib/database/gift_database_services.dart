@@ -20,6 +20,25 @@ class GiftDatabaseServices{
       return await db.delete("Gift", where: "id = ?" ,whereArgs: [gift.id]);
     }
 
+    static Future<List<Gift>> getGiftsByEventID(int eventID) async{
+      final db = await DatabaseVersionControl.getDB();
+
+      final List<Map<String, dynamic>> eventMaps = await db.query(
+        "Gift",
+        where: "eventID = ?",
+        whereArgs: [eventID],
+      );
+
+      if (eventMaps.isEmpty) return [];
+
+      return List.generate(
+        eventMaps.length,
+            (index) => Gift.fromJson(eventMaps[index]),
+      );
+
+    }
+
+
     static Future<List<Gift>> getAllGifts() async{
       final db = await DatabaseVersionControl.getDB();
 

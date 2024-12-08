@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/models/user.dart';
-import '../custom_widgets/circularMenuButton.dart';
 import '../custom_widgets/friend.dart';
 import 'package:circular_menu/circular_menu.dart';
 import 'package:flutter/cupertino.dart';
@@ -48,7 +47,7 @@ class _HomeScreen extends State<HomeScreen> {
               color: MyColors.navy,
               icon: Icons.person_2_outlined,
               onTap: (){
-                Navigator.pushNamed(context, '/ProfilePage');
+                Navigator.pushNamed(context, '/ProfilePage',arguments: user);
                 }, // Uses the correct context
             ),
             CircularMenuItem(

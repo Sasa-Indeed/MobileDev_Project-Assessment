@@ -128,6 +128,9 @@ class _PledgedGiftsPageState extends State<PledgedGiftsPage> {
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: MyColors.orange, // Set the back arrow color
+        ),
         title: const Padding(
           padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
           child: Text(

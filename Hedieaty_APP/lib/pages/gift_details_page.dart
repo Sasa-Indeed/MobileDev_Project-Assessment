@@ -12,45 +12,93 @@ class GiftDetailsPage extends StatefulWidget {
 
 class _GiftDetailsPageState extends State<GiftDetailsPage> {
   final _formKey = GlobalKey<FormState>();
-  Gift? gift;
+  late Gift _gift; // Use late to initialize in initState
+
+  // Controllers for text fields to capture changes
+  late TextEditingController _nameController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _categoryController;
+  late TextEditingController _priceController;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Retrieve the gift from route arguments
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Gift) {
         setState(() {
-          gift = args;
+          _gift = args;
+          // Initialize controllers with current gift values
+          _nameController = TextEditingController(text: _gift.name);
+          _descriptionController = TextEditingController(text: _gift.description);
+          _categoryController = TextEditingController(text: _gift.category);
+          _priceController = TextEditingController(text: _gift.price.toString());
         });
       }
     });
   }
 
-  // Save changes to the database
+  @override
+  void dispose() {
+    // Dispose controllers to prevent memory leaks
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _categoryController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
+
   Future<void> _saveChanges() async {
     if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
-      if (gift != null) {
-        await GiftDatabaseServices.updateGift(gift!);
+      // Create an updated gift object with new values
+      Gift updatedGift = _gift.copyWith(
+        name: _nameController.text,
+        description: _descriptionController.text,
+        category: _categoryController.text,
+        price: double.tryParse(_priceController.text) ?? _gift.price,
+      );
+
+      try {
+        // Update the gift in the database
+        await GiftDatabaseServices.updateGift(updatedGift);
+
+        // Pop the screen and return the updated gift
+        Navigator.pop(context, updatedGift);
+      } catch (e) {
+        // Handle any potential errors (optional)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save gift: $e')),
+        );
       }
-      Navigator.pop(context, gift);
     }
   }
 
-  // Update pledge status
   Future<void> _togglePledgeStatus(bool isPledged) async {
-    if (gift != null) {
+    try {
+      // Create a new gift object with updated status
+      Gift updatedGift = _gift.copyWith(
+        status: isPledged ? "Pledged" : "Pending",
+      );
+
+      // Update the gift in the database
+      await GiftDatabaseServices.updateGift(updatedGift);
+
+      // Only update the local state after a successful database update
       setState(() {
-        gift = gift!.copyWith(status: isPledged ? "Pledged" : "Pending");
+        _gift = updatedGift;
       });
-      await GiftDatabaseServices.updateGift(gift!);
+    } catch (e) {
+      // Handle any potential errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update status: $e')),
+      );
     }
   }
 
-  // Function to display dialog to input image path
-  Future<void> showImagePathDialog() async {
-    if (gift != null && gift!.status != "Pledged") {
+
+  Future<void> _showImagePathDialog() async {
+    if (_gift.status != "Pledged") {
       final result = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
@@ -74,28 +122,41 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
           );
         },
       );
+
       if (result != null) {
-        setState(() {
-          gift = gift!.copyWith(imagePath: result);
-        });
-        await GiftDatabaseServices.updateGift(gift!);
+        try {
+          // Create an updated gift object with new image path
+          Gift updatedGift = _gift.copyWith(imagePath: result);
+
+          // Update the gift in the database and local state
+          await GiftDatabaseServices.updateGift(updatedGift);
+          setState(() {
+            _gift = updatedGift;
+          });
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update image path: $e')),
+          );
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (gift == null) {
+    // Check if _gift is initialized
+    if (_nameController == null) {
       return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: MyColors.orange, // Set the back arrow color
+        ),
         title: const Padding(
           padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
           child: Text(
@@ -112,139 +173,193 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    if (gift!.status != "Pledged") {
-                      await showImagePathDialog();
-                    }
-                  },
-                  child: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundImage: AssetImage(gift!.imagePath ?? 'asset/gift.png'),
-                      ),
-                      CircleAvatar(
-                        backgroundColor: MyColors.navy,
-                        radius: 15,
-                        child: Icon(
-                          gift!.status == "Pledged" ? Icons.close : Icons.edit,
-                          size: 20,
-                          color: MyColors.orange,
-                        ),
-                      ),
-                    ],
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: _showImagePathDialog,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: AssetImage(_gift.imagePath ?? 'asset/gift.png'),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Name
-                TextFormField(
-                  initialValue: gift!.name,
-                  decoration: _buildInputDecoration('Gift Name'),
-                  enabled: gift!.status != "Pledged",
-                  onSaved: (value) {
-                    if (value != null) {
-                      gift = gift!.copyWith(name: value);
-                    }
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the gift name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Description
-                TextFormField(
-                  initialValue: gift!.description,
-                  decoration: _buildInputDecoration('Description'),
-                  enabled: gift!.status != "Pledged",
-                  maxLines: 5,
-                  onSaved: (value) {
-                    if (value != null) {
-                      gift = gift!.copyWith(description: value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Category
-                TextFormField(
-                  initialValue: gift!.category,
-                  decoration: _buildInputDecoration('Category'),
-                  enabled: gift!.status != "Pledged",
-                  onSaved: (value) {
-                    if (value != null) {
-                      gift = gift!.copyWith(category: value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Price
-                TextFormField(
-                  initialValue: gift!.price.toString(),
-                  decoration: _buildInputDecoration('Price'),
-                  enabled: gift!.status != "Pledged",
-                  keyboardType: TextInputType.number,
-                  onSaved: (value) {
-                    if (value != null) {
-                      gift = gift!.copyWith(price: double.tryParse(value) ?? 0.0);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Status
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Status: ${gift!.status}',
-                      style: const TextStyle(
-                        fontSize: 18,
+                  CircleAvatar(
+                    backgroundColor: MyColors.navy,
+                    radius: 15,
+                    child: Icon(
+                      _gift.status == "Pledged" ? Icons.close : Icons.edit,
+                      size: 20,
+                      color: MyColors.orange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    style: TextStyle(
+                      color: _gift.status == "Pledged"
+                          ? MyColors.gray.withOpacity(0.5)
+                          : MyColors.gray,
+                      fontSize: 20,
+                    ),
+                    enabled: _gift.status != "Pledged",
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: MyColors.blue,
+                      labelText: 'Gift Name',
+                      labelStyle: TextStyle(
+                        color: _gift.status == "Pledged"
+                            ? MyColors.orange.withOpacity(0.5)
+                            : MyColors.orange,
+                        fontFamily: "playWrite",
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the gift name';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 30),
+                  TextFormField(
+                    controller: _descriptionController,
+                    style: TextStyle(
+                      color: _gift.status == "Pledged"
+                          ? MyColors.gray.withOpacity(0.5)
+                          : MyColors.gray,
+                      fontSize: 20,
+                    ),
+                    enabled: _gift.status != "Pledged",
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: MyColors.blue,
+                      labelText: 'Description',
+                      labelStyle: TextStyle(
+                        color: _gift.status == "Pledged"
+                            ? MyColors.orange.withOpacity(0.5)
+                            : MyColors.orange,
+                        fontFamily: "playWrite",
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  TextFormField(
+                    controller: _categoryController,
+                    style: TextStyle(
+                      color: _gift.status == "Pledged"
+                          ? MyColors.gray.withOpacity(0.5)
+                          : MyColors.gray,
+                      fontSize: 20,
+                    ),
+                    enabled: _gift.status != "Pledged",
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: MyColors.blue,
+                      labelText: 'Category',
+                      labelStyle: TextStyle(
+                        color: _gift.status == "Pledged"
+                            ? MyColors.orange.withOpacity(0.5)
+                            : MyColors.orange,
+                        fontFamily: "playWrite",
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  TextFormField(
+                    controller: _priceController,
+                    style: TextStyle(
+                      color: _gift.status == "Pledged"
+                          ? MyColors.gray.withOpacity(0.5)
+                          : MyColors.gray,
+                      fontSize: 20,
+                    ),
+                    enabled: _gift.status != "Pledged",
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: MyColors.blue,
+                      labelText: 'Price',
+                      labelStyle: TextStyle(
+                        color: _gift.status == "Pledged"
+                            ? MyColors.orange.withOpacity(0.5)
+                            : MyColors.orange,
+                        fontFamily: "playWrite",
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: MyColors.blue,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Status: ${_gift.status}',
+                          style: const TextStyle(
+                            color: MyColors.orange,
+                            fontFamily: "playWrite",
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Switch(
+                          activeTrackColor: MyColors.orange,
+                          value: _gift.status == "Pledged",
+                          onChanged: (value) => _togglePledgeStatus(value),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: MyColors.navy,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
+                    ),
+                    onPressed: _saveChanges, // Always enabled
+                    child: const Text(
+                      'Save Gift',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontFamily: "playWrite",
                         color: MyColors.orange,
                       ),
                     ),
-                    Switch(
-                      activeTrackColor: MyColors.orange,
-                      value: gift!.status == "Pledged",
-                      onChanged: (value) => _togglePledgeStatus(value),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Save Button
-                ElevatedButton(
-                  onPressed: gift!.status != "Pledged" ? _saveChanges : null,
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(fontSize: 18),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration(String labelText) {
-    return InputDecoration(
-      filled: true,
-      fillColor: MyColors.blue,
-      labelText: labelText,
-      labelStyle: const TextStyle(
-        color: MyColors.orange,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
-      border: const OutlineInputBorder(),
     );
   }
 }

@@ -1,11 +1,11 @@
 class User{
   int? id;
-  final String name;
+  String name;
   List<String> preferences;
-  final String email;
+  String email;
   final String password;
-  final String phoneNumber;
-  final bool isNotificationEnabled;
+  String phoneNumber;
+  bool isNotificationEnabled;
 
 
   User({required this.name,

@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'package:hedieaty_app/database/user_database_services.dart';
+import 'package:hedieaty_app/database/event_database_services.dart';
+import 'package:hedieaty_app/database/gift_database_services.dart';
+import '../models/user.dart';
+import '../models/event.dart';
+import '../models/gift.dart';
 import 'update_profile_page.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -10,19 +16,54 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreen extends State<ProfileScreen> {
-  // Replace with actual user data retrieval
-  final String username = "Sasa123";
-  final String firstName = "Sasa";
-  final String lastName = "Pizza";
-  final String email = "hotChicken@example.com";
   IconData iconImage = Icons.notifications_active_rounded;
   bool _notification = true;
 
+  List<Event> _upcomingEvents = [];
+  Map<int, List<Gift>> _eventGifts = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      List<Event> events = await EventDatabaseServices.getUpcomingEvents();
+      Map<int, List<Gift>> giftsMap = {};
+
+      for (var event in events) {
+        giftsMap[event.id!] = await GiftDatabaseServices.getGiftsByEventID(event.id!);
+      }
+
+      setState(() {
+        _upcomingEvents = events;
+        _eventGifts = giftsMap;
+        _isLoading = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load events: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    User user = ModalRoute.of(context)!.settings.arguments as User;
+    _notification = user.isNotificationEnabled;
+    if(!_notification){
+      iconImage = Icons.notifications_off_rounded;
+    }
+
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: MyColors.orange, // Set the back arrow color
+        ),
         title: const Padding(
           padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
           child: Text(
@@ -39,7 +80,9 @@ class _ProfileScreen extends State<ProfileScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Section
@@ -54,17 +97,17 @@ class _ProfileScreen extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      username,
+                      user.name,
                       style: TextStyle(fontSize: 20, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "$firstName $lastName",
+                      user.email,
                       style: const TextStyle(
                           fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
-                    Text(email, style: const TextStyle(color: Colors.grey)),
+                    Text(user.phoneNumber, style: const TextStyle(color: Colors.grey)),
                     const SizedBox(height: 8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -75,9 +118,10 @@ class _ProfileScreen extends State<ProfileScreen> {
                           context,
                           MaterialPageRoute(
                               builder: (context) => UpdateProfilePage(
-                                firstName: firstName,
-                                lastName: lastName,
-                                email: email,
+                                name: user.name,
+                                email: user.email,
+                                phoneNumber: user.phoneNumber,
+                                user: user,
                               )),
                         );
                       },
@@ -107,6 +151,8 @@ class _ProfileScreen extends State<ProfileScreen> {
                   iconImage = value
                       ? Icons.notifications_active_rounded
                       : Icons.notifications_off_rounded;
+                  user.isNotificationEnabled = value;
+                  UserDatabaseServices.updateUser(user);
                 });
               },
               secondary: Icon(iconImage),
@@ -119,12 +165,20 @@ class _ProfileScreen extends State<ProfileScreen> {
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: 3, // Replace with actual list count
+                itemCount: _upcomingEvents.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text("Event $index"),
-                    subtitle: Text("Associated Gift $index"),
-                    leading: const Icon(Icons.event),
+                  Event event = _upcomingEvents[index];
+                  List<Gift> gifts = _eventGifts[event.id] ?? [];
+                  return ExpansionTile(
+                    title: Text(event.name),
+                    subtitle: Text(
+                        "${gifts.length} associated gift(s)"),
+                    children: gifts
+                        .map((gift) => ListTile(
+                      title: Text(gift.name),
+                      leading: const Icon(Icons.card_giftcard),
+                    ))
+                        .toList(),
                   );
                 },
               ),

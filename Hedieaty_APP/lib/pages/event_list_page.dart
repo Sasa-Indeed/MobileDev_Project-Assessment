@@ -268,6 +268,9 @@ class _EventListPageState extends State<EventListPage> {
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: MyColors.orange, // Set the back arrow color
+        ),
         title: const Text(
           'Event Calendar',
           style: TextStyle(

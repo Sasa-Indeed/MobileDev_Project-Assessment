@@ -53,12 +53,19 @@ class _GiftListPageState extends State<GiftListPage> {
     fetchGifts();
   }
 
-  Future<void> editGift(Gift updatedGift) async {
-    await GiftDatabaseServices.updateGift(updatedGift);
-    fetchGifts();
+  Future<void> _navigateAndRefreshGift(Gift gift) async {
+    // Navigate to gift details and wait for result
+    final result = await Navigator.pushNamed(
+      context,
+      '/GiftDetailsPage',
+      arguments: gift,
+    );
+
+    // If the result is a Gift object, it means the gift was updated
+    if (result is Gift) {
+      fetchGifts(); // Refresh the entire gift list
+    }
   }
-
-
 
   void showAddGiftDialog() {
     if (upcomingEvents.isEmpty) {
@@ -188,6 +195,9 @@ class _GiftListPageState extends State<GiftListPage> {
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
+        iconTheme: const IconThemeData(
+          color: MyColors.orange, // Set the back arrow color
+        ),
         title: const Text(
           'Gift List',
           style: TextStyle(
@@ -225,13 +235,7 @@ class _GiftListPageState extends State<GiftListPage> {
         itemBuilder: (context, index) {
           Gift gift = gifts[index];
           return GestureDetector(
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/GiftDetailsPage',
-                arguments: gift, // Passing the selected gift as an argument
-              );
-            },
+            onTap: () => _navigateAndRefreshGift(gift),
             child: Card(
               color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
               child: Row(
@@ -291,7 +295,6 @@ class _GiftListPageState extends State<GiftListPage> {
             ),
           );
         },
-
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: showAddGiftDialog,
