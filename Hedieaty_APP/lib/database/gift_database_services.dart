@@ -39,16 +39,20 @@ class GiftDatabaseServices{
     }
 
 
-    static Future<List<Gift>> getAllGifts() async{
+    static Future<List<Gift>> getAllGiftsByUserID(int userID) async{
       final db = await DatabaseVersionControl.getDB();
 
-      final List<Map<String, dynamic>> maps = await db.query("Gift");
+      final List<Map<String, dynamic>> maps = await db.query(
+          "Gift",
+          where: 'userID = ?',
+          whereArgs: [userID]);
 
       if(maps.isEmpty){
         return [];
       }
-      
+
       return List.generate(maps.length, (index) => Gift.fromJson(maps[index]));
     }
+
 
 }

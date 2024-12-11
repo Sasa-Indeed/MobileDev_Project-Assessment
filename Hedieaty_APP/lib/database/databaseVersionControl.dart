@@ -56,6 +56,7 @@ class DatabaseVersionControl{
           price REAL NOT NULL,
           status TEXT NOT NULL,
           eventID INTEGER NOT NULL,
+          userID INTEGER NOT NULL,
           imagePath TEXT,
           FOREIGN KEY (eventID) REFERENCES Event(id) ON DELETE CASCADE
       );

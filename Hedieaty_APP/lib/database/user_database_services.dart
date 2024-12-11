@@ -126,6 +126,28 @@ class UserDatabaseServices {
     return null;
   }
 
+  static Future<String> getUserProfileImagePath(int userID) async {
+    final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
+    final List<Map<String, dynamic>> userResult = await db.query(
+      'User',
+      where: 'id = ?',
+      whereArgs: [userID],
+    );
+
+    if (userResult.isNotEmpty) {
+      final userData = userResult.first;
+
+      final List<String> preferences = await _getUserPreferences(userData['id']);
+
+      User user = User.fromJson(userData);
+      user.preferences = preferences;
+
+      return user.profileImagePath;
+    }
+
+    return "";
+  }
+
   static Future<List<String>> _getUserPreferences(int userId) async {
     final db = await DatabaseVersionControl.getDB();
 

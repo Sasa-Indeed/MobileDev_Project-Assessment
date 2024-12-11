@@ -31,7 +31,9 @@ class _ProfileScreen extends State<ProfileScreen> {
 
   Future<void> _fetchData() async {
     try {
-      List<Event> events = await EventDatabaseServices.getUpcomingEvents();
+      User user = ModalRoute.of(context)!.settings.arguments as User; // Get user
+      int userID = user.id!; // Extract userID
+      List<Event> events = await EventDatabaseServices.getUpcomingEventsByUserID(userID);
       Map<int, List<Gift>> giftsMap = {};
 
       for (var event in events) {
@@ -50,13 +52,21 @@ class _ProfileScreen extends State<ProfileScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     User user = ModalRoute.of(context)!.settings.arguments as User;
+
+    // Fetch data if it's the first build
+    if (_isLoading) {
+      _fetchData(); // Now we can safely access user.id
+    }
+
     _notification = user.isNotificationEnabled;
-    if(!_notification){
+    if (!_notification) {
       iconImage = Icons.notifications_off_rounded;
     }
+
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
@@ -106,7 +116,8 @@ class _ProfileScreen extends State<ProfileScreen> {
                           fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
-                    Text(user.phoneNumber, style: const TextStyle(color: Colors.grey)),
+                    Text(user.phoneNumber,
+                        style: const TextStyle(color: Colors.grey)),
                     const SizedBox(height: 8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -207,4 +218,5 @@ class _ProfileScreen extends State<ProfileScreen> {
       ),
     );
   }
+
 }

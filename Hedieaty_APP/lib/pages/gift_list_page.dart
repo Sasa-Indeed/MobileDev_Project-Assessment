@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
+import 'package:hedieaty_app/database/gift_database_services.dart';
 import 'package:hedieaty_app/models/event.dart';
 import 'package:hedieaty_app/models/gift.dart';
-import '../database/gift_database_services.dart';
 
 class GiftListPage extends StatefulWidget {
   const GiftListPage({super.key});
@@ -20,54 +20,83 @@ class _GiftListPageState extends State<GiftListPage> {
   @override
   void initState() {
     super.initState();
-    fetchGifts();
-    getEvents();
+
+    // Delay fetch operations until the context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userID = ModalRoute.of(context)!.settings.arguments as int;
+      fetchGifts(userID);
+      getEvents(userID);
+    });
   }
 
-  Future<void> fetchGifts() async {
+  Future<void> fetchGifts(int userID) async {
     setState(() {
       isLoading = true;
     });
-    gifts = await GiftDatabaseServices.getAllGifts();
-    setState(() {
-      isLoading = false;
-    });
+
+    try {
+      gifts = await GiftDatabaseServices.getAllGiftsByUserID(userID);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load gifts: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  Future<void> getEvents() async {
-    upcomingEvents = await EventDatabaseServices.getUpcomingEvents();
-    setState(() {}); // Update UI to reflect loaded events
+  Future<void> getEvents(int userID) async {
+    try {
+      // Fetch the upcoming events for the user
+      upcomingEvents = await EventDatabaseServices.getUpcomingEventsByUserID(userID);
+
+      // Update the UI
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load events: $e')),
+      );
+    }
   }
 
-  Future<void> addGift(String name, String description, String category, double price, String status, int? eventID, {String? imagePath}) async {
+  Future<void> addGift({
+    required String name,
+    required String description,
+    required String category,
+    required double price,
+    required String status,
+    required int eventID,
+    required int userID,
+    String? imagePath,
+  }) async {
     Gift newGift = Gift(
       name: name,
       description: description,
       category: category,
       price: price,
       status: status,
-      eventID: eventID!,
+      eventID: eventID,
+      userID: userID,
       imagePath: imagePath,
     );
     await GiftDatabaseServices.insertGift(newGift);
-    fetchGifts();
+    fetchGifts(userID);
   }
 
-  Future<void> _navigateAndRefreshGift(Gift gift) async {
-    // Navigate to gift details and wait for result
-    final result = await Navigator.pushNamed(
-      context,
-      '/GiftDetailsPage',
-      arguments: gift,
-    );
-
-    // If the result is a Gift object, it means the gift was updated
-    if (result is Gift) {
-      fetchGifts(); // Refresh the entire gift list
+  Future<void> deleteGift(Gift gift) async {
+    try {
+      await GiftDatabaseServices.deleteGift(gift);
+      fetchGifts(gift.userID);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete gift: $e')),
+      );
     }
   }
 
-  void showAddGiftDialog() {
+  void showAddGiftDialog(int userID) {
     if (upcomingEvents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("No events available to add a gift."),
@@ -80,7 +109,7 @@ class _GiftListPageState extends State<GiftListPage> {
     String newCategory = '';
     double newPrice = 0.0;
     String? newImagePath;
-    Event? selectedEvent = upcomingEvents.first;
+    Event? selectedEvent = upcomingEvents.first; // Initialize with the first event
 
     showDialog(
       context: context,
@@ -149,17 +178,23 @@ class _GiftListPageState extends State<GiftListPage> {
                         newDescription.isNotEmpty &&
                         newCategory.isNotEmpty &&
                         newPrice > 0 &&
-                        selectedEvent != null) {
+                        selectedEvent != null &&
+                        selectedEvent?.id != null) {
                       await addGift(
-                        newName,
-                        newDescription,
-                        newCategory,
-                        newPrice,
-                        'Pending',
-                        selectedEvent?.id,
+                        name: newName,
+                        description: newDescription,
+                        category: newCategory,
+                        price: newPrice,
+                        status: 'Pending',
+                        eventID: selectedEvent?.id ??0,
+                        userID: userID,
                         imagePath: newImagePath,
                       );
                       Navigator.of(context).pop();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("Please fill out all fields."),
+                      ));
                     }
                   },
                 ),
@@ -171,32 +206,15 @@ class _GiftListPageState extends State<GiftListPage> {
     );
   }
 
-  // Delete a gift
-  Future<void> deleteGift(Gift gift) async {
-    await GiftDatabaseServices.deleteGift(gift);
-    fetchGifts();
-  }
-
-  // Sorting function
-  void sortGifts(String option) {
-    setState(() {
-      if (option == 'name') {
-        gifts.sort((a, b) => a.name.compareTo(b.name));
-      } else if (option == 'category') {
-        gifts.sort((a, b) => a.category.compareTo(b.category));
-      } else if (option == 'status') {
-        gifts.sort((a, b) => a.status.compareTo(b.status));
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final userID = ModalRoute.of(context)!.settings.arguments as int;
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: MyColors.orange, // Set the back arrow color
+          color: MyColors.orange,
         ),
         title: const Text(
           'Gift List',
@@ -234,70 +252,60 @@ class _GiftListPageState extends State<GiftListPage> {
         itemCount: gifts.length,
         itemBuilder: (context, index) {
           Gift gift = gifts[index];
-          return GestureDetector(
-            onTap: () => _navigateAndRefreshGift(gift),
-            child: Card(
-              color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
-              child: Row(
-                children: [
-                  // Gift Image
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage(
-                        gift.imagePath ?? 'asset/gift.png',
-                      ),
+          return Card(
+            color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage: AssetImage(
+                      gift.imagePath ?? 'asset/gift.png',
                     ),
                   ),
-                  // Gift Attributes
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            gift.name,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          gift.name,
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Description: ${gift.description}",
-                            style: const TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Description: ${gift.description}",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                  // Action Buttons
-                  Column(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.white),
-                        onPressed: () {
-                          if (gift.status != "Pledged") {
-                            deleteGift(gift);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.white),
+                  onPressed: () {
+                    if (gift.status != "Pledged") {
+                      deleteGift(gift);
+                    }
+                  },
+                ),
+              ],
             ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: showAddGiftDialog,
+        onPressed: () => showAddGiftDialog(userID),
         backgroundColor: MyColors.navy,
         child: const Icon(
           Icons.add,

@@ -182,9 +182,17 @@ class _HomeScreen extends State<HomeScreen> {
           centerTitle: true,
           backgroundColor: MyColors.navy,
         ),
-        body: const Column(
+        body: Column(
           children: [
-             Friends(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
+             const Friends(image: "asset/man.jpg", name: "Sasa", eventStatus: "Birthday"),
+              ElevatedButton(
+                  onPressed: () async {
+                    List<int> friends = await FriendsDatabaseServices.getFriendsIDs(user.id!);
+                    for(int f in friends){
+                      print(f);
+                    }
+                  }, 
+                  child: const Text("pressme"))
           ],
         ),
         floatingActionButton: CircularMenu(
@@ -209,7 +217,7 @@ class _HomeScreen extends State<HomeScreen> {
               color: MyColors.navy,
               icon: CupertinoIcons.gift,
               onTap: () {
-                Navigator.pushNamed(context, '/GiftListPage');
+                Navigator.pushNamed(context, '/GiftListPage', arguments: user.id);
               },
             ),
             CircularMenuItem(

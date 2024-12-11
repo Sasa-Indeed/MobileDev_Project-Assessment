@@ -74,13 +74,16 @@ class EventDatabaseServices{
     return Event.fromJson(eventMaps.first);
   }
 
-  static Future<List<Event>> getUpcomingEvents() async {
+  static Future<List<Event>> getUpcomingEventsByUserID(int userId) async {
     final db = await DatabaseVersionControl.getDB();
     final currentDate = DateTime.now();
     List<Event> upcomingEvents = [];
     DateTime dateTime;
 
-    final List<Map<String, dynamic>> eventsMap = await db.query("Event");
+    final List<Map<String, dynamic>> eventsMap = await db.query(
+        "Event",
+        where: "userID = ?",
+        whereArgs: [userId]);
 
     if(eventsMap.isEmpty){
       return [];

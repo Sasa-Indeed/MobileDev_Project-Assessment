@@ -20,16 +20,43 @@ class FriendsDatabaseServices{
     return await db.delete("Friends", where: "id = ?" ,whereArgs: [friend.userID]);
   }
 
-  static Future<List<Friend>?> getAllFriends() async{
+  static Future<List<Friend>> getAllFriends() async{
     final db = await DatabaseVersionControl.getDB();
 
     final List<Map<String, dynamic>> maps = await db.query("Friends");
 
     if(maps.isEmpty){
-      return null;
+      return [];
     }
 
     return List.generate(maps.length, (index) => Friend.fromJson(maps[index]));
+  }
+
+  static Future<List<int>> getFriendsIDs(int userID) async{
+    final db = await DatabaseVersionControl.getDB();
+
+    final List<Map<String, dynamic>> maps = await db.query(
+        "Friends",
+        where: "userID = ? OR friendID = ?",
+        whereArgs: [userID, userID]);
+
+    if(maps.isEmpty){
+      return [];
+    }
+
+    List<Friend> friends = List.generate(maps.length, (index) => Friend.fromJson(maps[index]));
+    List<int> friendsIDs = [];
+
+    for(Friend friend in friends){
+      if(friend.userID == userID){
+        friendsIDs.add(friend.friendID);
+      }else{
+        friendsIDs.add(friend.userID);
+      }
+    }
+
+
+    return friendsIDs;
   }
 
   static Future<int> checkFriendExists(int userID, int friendID) async {
