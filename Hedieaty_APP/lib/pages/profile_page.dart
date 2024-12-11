@@ -57,7 +57,6 @@ class _ProfileScreen extends State<ProfileScreen> {
     if(!_notification){
       iconImage = Icons.notifications_off_rounded;
     }
-
     return Scaffold(
       backgroundColor: MyColors.gray,
       appBar: AppBar(
@@ -88,9 +87,9 @@ class _ProfileScreen extends State<ProfileScreen> {
             // Profile Section
             Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 40,
-                  backgroundImage: AssetImage('asset/man.jpg'),
+                  backgroundImage: AssetImage(user.profileImagePath),
                 ),
                 const SizedBox(width: 16),
                 Column(

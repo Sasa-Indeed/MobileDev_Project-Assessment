@@ -75,6 +75,35 @@ class UserDatabaseServices {
     return users;
   }
 
+  static Future<int> findUserByPhoneNumber(String phoneNumber) async{
+    final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
+    final List<Map<String, dynamic>> userResult = await db.query('User',  where: "phoneNumber = ?", whereArgs: [phoneNumber],);
+
+    if(userResult.isEmpty){
+      return -1;
+    }
+
+    final userData = userResult.first;
+
+    User user = User.fromJson(userData);
+
+    return user.id!;
+  }
+
+  static Future<int> findUserByEmail(String email) async{
+    final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
+    final List<Map<String, dynamic>> userResult = await db.query('User',  where: "email = ?", whereArgs: [email],);
+
+    if(userResult.isEmpty){
+      return -1;
+    }
+    final userData = userResult.first;
+
+    User user = User.fromJson(userData);
+
+    return user.id!;
+  }
+
   static Future<User?> getUserByEmail(String email, String password) async {
     final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
     final List<Map<String, dynamic>> userResult = await db.query(
@@ -109,9 +138,4 @@ class UserDatabaseServices {
     return preferenceMaps.map((map) => map['preference'] as String).toList();
   }
 
-  static void testTable() async {
-    final db = await DatabaseVersionControl.getDB();
-    final result = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'");
-    print("Tables: $result");
-  }
 }

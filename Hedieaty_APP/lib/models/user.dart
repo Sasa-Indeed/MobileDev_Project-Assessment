@@ -5,6 +5,7 @@ class User{
   String email;
   final String password;
   String phoneNumber;
+  String profileImagePath;
   bool isNotificationEnabled;
 
 
@@ -13,6 +14,7 @@ class User{
         required this.email,
         required this.password,
         required this.phoneNumber,
+        required this.profileImagePath,
         required this.isNotificationEnabled,
         this.id});
 
@@ -23,6 +25,7 @@ class User{
       email: json['email'],
       password: json['password'],
       phoneNumber: json['phoneNumber'],
+      profileImagePath: json['profileImagePath'],
       isNotificationEnabled: json['isNotificationEnabled'] == 1,
   );
 
@@ -32,6 +35,7 @@ class User{
     'email': email,
     'password': password,
     'phoneNumber': phoneNumber,
+    'profileImagePath': profileImagePath,
     'isNotificationEnabled': isNotificationEnabled ? 1 : 0,
   };
 }

@@ -79,6 +79,14 @@ flutter:
     - asset/SignInImage.jpeg
     - asset/empty_gift.png
     - asset/images/no_events.jpeg
+    - asset/profile_images/P1.png
+    - asset/profile_images/P2.png
+    - asset/profile_images/P3.png
+    - asset/profile_images/P4.png
+    - asset/profile_images/P5.png
+    - asset/profile_images/P6.png
+    - asset/profile_images/P7.png
+    - asset/profile_images/P8.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

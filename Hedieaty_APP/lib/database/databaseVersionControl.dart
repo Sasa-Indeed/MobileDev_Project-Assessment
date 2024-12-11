@@ -18,6 +18,7 @@ class DatabaseVersionControl{
             email TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             phoneNumber TEXT NOT NULL,
+            profileImagePath TEXT NOT NULL,
             isNotificationEnabled INTEGER NOT NULL
           );
         """);

@@ -28,6 +28,8 @@ class _SignupScreenState extends State<SignupScreen> {
   List<String> _selectedPreferences = []; // List for selected preferences
   bool _notificationsEnabled = false; // For notification toggle
   IconData _iconImage = Icons.notifications_off_rounded;
+  final List<String> _profileImages = List.generate(8, (index) => 'asset/profile_images/P${index + 1}.png',);
+  String? _selectedProfileImage;
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -66,7 +68,7 @@ class _SignupScreenState extends State<SignupScreen> {
     final Cpassword = _confirmPasswordController.text.trim();
 
     if(name.isEmpty || email.isEmpty || phone.isEmpty
-        || password.isEmpty || _selectedPreferences.isEmpty){
+        || password.isEmpty || _selectedPreferences.isEmpty || _selectedProfileImage == null){
       _showPopup(context, "Missing Field(s)", "Please enter the data in all the fields.");
       return;
     }
@@ -86,6 +88,7 @@ class _SignupScreenState extends State<SignupScreen> {
       phoneNumber: phone,
       isNotificationEnabled: _notificationsEnabled,
       preferences: _selectedPreferences,
+      profileImagePath: _selectedProfileImage!,
     );
 
     int userId = await UserDatabaseServices.insertUser(user);
@@ -150,6 +153,63 @@ class _SignupScreenState extends State<SignupScreen> {
                             controller: _nameController,
                             label: "Name",
                             icon: Icons.person,
+                          ),
+                          const SizedBox(height: 20),
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return GridView.builder(
+                                    padding: const EdgeInsets.all(16),
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 4,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                    ),
+                                    itemCount: _profileImages.length,
+                                    itemBuilder: (context, index) {
+                                      final imagePath = _profileImages[index];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedProfileImage = imagePath;
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: _selectedProfileImage == imagePath
+                                                  ? Colors.blue
+                                                  : Colors.transparent,
+                                              width: 2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Image.asset(imagePath),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            child: Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _selectedProfileImage == null
+                                      ? "Select Profile Image"
+                                      : "Image Selected",
+                                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                ),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 20),
                           _buildTextField(

@@ -4,7 +4,7 @@ class Notifications{
   final String title;
   final String body;
   final DateTime timestamp;
-  final bool status;
+  final bool status; // Read ture - Unread false
 
   Notifications({required this.title, required this.body, required this.timestamp,
     required this.status, this.id}); // Read (true) Unread (false)
