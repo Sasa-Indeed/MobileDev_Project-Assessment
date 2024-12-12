@@ -27,17 +27,6 @@ class EventDatabaseServices{
     return await db.delete("Event", where: "id = ?", whereArgs: [eventId]);
   }
 
-  static Future<List<Event>> getAllEvents() async{
-    final db = await DatabaseVersionControl.getDB();
-
-    final List<Map<String, dynamic>> eventsMap = await db.query("Event");
-
-    if(eventsMap.isEmpty){
-      return [];
-    }
-
-    return List.generate(eventsMap.length, (index) => Event.fromJson(eventsMap[index]));
-  }
 
   // Get all events for a user
   static Future<List<Event>> getEventsByUser(int userId) async {
