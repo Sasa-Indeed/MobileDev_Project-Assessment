@@ -31,7 +31,7 @@ class _ProfileScreen extends State<ProfileScreen> {
 
   Future<void> _fetchData() async {
     try {
-      User user = ModalRoute.of(context)!.settings.arguments as User; // Get user
+      Userdb user = ModalRoute.of(context)!.settings.arguments as Userdb; // Get user
       int userID = user.id!; // Extract userID
       List<Event> events = await EventDatabaseServices.getUpcomingEventsByUserID(userID);
       Map<int, List<Gift>> giftsMap = {};
@@ -55,7 +55,7 @@ class _ProfileScreen extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    User user = ModalRoute.of(context)!.settings.arguments as User;
+    Userdb user = ModalRoute.of(context)!.settings.arguments as Userdb;
 
     // Fetch data if it's the first build
     if (_isLoading) {

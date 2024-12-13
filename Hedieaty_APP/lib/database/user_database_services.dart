@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class UserDatabaseServices {
 
-  static Future<int> insertUser(User user) async {
+  static Future<int> insertUser(Userdb user) async {
     final db = await DatabaseVersionControl.getDB();
     int userId = -1;
     // Insert the user
@@ -29,7 +29,7 @@ class UserDatabaseServices {
   }
 
   // Update a user and their preferences
-  static Future<int> updateUser(User user) async {
+  static Future<int> updateUser(Userdb user) async {
     final db = await DatabaseVersionControl.getDB();
 
     // Update the user
@@ -55,7 +55,7 @@ class UserDatabaseServices {
     return await db.delete("User", where: "id = ?", whereArgs: [userId]);
   }
 
-  static Future<List<User>> getAllUsers() async {
+  static Future<List<Userdb>> getAllUsers() async {
     final db = await DatabaseVersionControl.getDB();
 
     // Fetch all users
@@ -63,12 +63,12 @@ class UserDatabaseServices {
 
     if (userMaps.isEmpty) return [];
 
-    List<User> users = List.generate(
+    List<Userdb> users = List.generate(
       userMaps.length,
-          (index) => User.fromJson(userMaps[index]),
+          (index) => Userdb.fromJson(userMaps[index]),
     );
 
-    for (User user in users) {
+    for (Userdb user in users) {
       user.preferences = await _getUserPreferences(user.id!);
     }
 
@@ -85,7 +85,7 @@ class UserDatabaseServices {
 
     final userData = userResult.first;
 
-    User user = User.fromJson(userData);
+    Userdb user = Userdb.fromJson(userData);
 
     return user.id!;
   }
@@ -99,12 +99,12 @@ class UserDatabaseServices {
     }
     final userData = userResult.first;
 
-    User user = User.fromJson(userData);
+    Userdb user = Userdb.fromJson(userData);
 
     return user.id!;
   }
 
-  static Future<User?> getUserByEmail(String email, String password) async {
+  static Future<Userdb?> getUserByEmail(String email, String password) async {
     final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
     final List<Map<String, dynamic>> userResult = await db.query(
       'User',
@@ -117,7 +117,7 @@ class UserDatabaseServices {
 
       final List<String> preferences = await _getUserPreferences(userData['id']);
 
-      User user = User.fromJson(userData);
+      Userdb user = Userdb.fromJson(userData);
       user.preferences = preferences;
 
       return user;
@@ -137,7 +137,7 @@ class UserDatabaseServices {
     if (userResult.isNotEmpty) {
       final userData = userResult.first;
 
-      User user = User.fromJson(userData);
+      Userdb user = Userdb.fromJson(userData);
 
       return user.profileImagePath;
     }
@@ -156,7 +156,7 @@ class UserDatabaseServices {
     if (userResult.isNotEmpty) {
       final userData = userResult.first;
 
-      User user = User.fromJson(userData);
+      Userdb user = Userdb.fromJson(userData);
 
       return user.name;
     }

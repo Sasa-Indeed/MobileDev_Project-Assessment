@@ -8,9 +8,9 @@ class UpdateProfilePage extends StatelessWidget {
   final TextEditingController nameController;
   final TextEditingController phoneNumberController;
   final TextEditingController emailController;
-  User user;
+  Userdb user;
 
-  UpdateProfilePage({required String name, required String phoneNumber, required String email,required User user})
+  UpdateProfilePage({required String name, required String phoneNumber, required String email,required Userdb user})
       : nameController = TextEditingController(text: name),
         phoneNumberController = TextEditingController(text: phoneNumber),
         emailController = TextEditingController(text: email),

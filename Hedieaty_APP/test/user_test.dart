@@ -17,7 +17,7 @@ void main() {
 
     DatabaseVersionControl.deleteDBs();
 
-    final user = User(
+    final user = Userdb(
       name: "John Doe",
       email: "johndoe@example.com",
       password: "sex",
@@ -30,7 +30,7 @@ void main() {
     final userId = await UserDatabaseServices.insertUser(user);
     expect(userId, greaterThan(0));
 
-    final user2 = User(
+    final user2 = Userdb(
       name: "Sasa",
       email: "jondoe@example.com",
       password: "sex",

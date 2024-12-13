@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Gift {
   final int? id;
   final String name;
@@ -52,5 +54,37 @@ class Gift {
       imagePath: imagePath ?? this.imagePath,
     );
   }
+
+  // Convert Firestore data to a Gift object
+  factory Gift.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Gift(
+      id: data['id'],
+      name: data['name'],
+      description: data['description'],
+      category: data['category'],
+      price: data['price'],
+      status: data['status'],
+      eventID: data['eventID'],
+      userID: data['userID'],
+      imagePath: data['imagePath'],
+    );
+  }
+
+  // Convert Gift object to Firestore-compatible map
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'category': category,
+      'price': price,
+      'status': status,
+      'eventID': eventID,
+      'userID': userID,
+      'imagePath': imagePath,
+    };
+  }
+
 
 }

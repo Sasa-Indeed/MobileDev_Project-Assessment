@@ -19,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late User user;
+  late Userdb user;
   List<FriendCard> friendCards = [];
 
   @override
@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    user = ModalRoute.of(context)!.settings.arguments as User;
+    user = ModalRoute.of(context)!.settings.arguments as Userdb;
 
     return MaterialApp(
       title: "Home",

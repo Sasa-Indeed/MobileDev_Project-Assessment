@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
 import 'package:hedieaty_app/database/gift_database_services.dart';
+import 'package:hedieaty_app/firebase_services/firestore_gift_service.dart';
 import 'package:hedieaty_app/models/event.dart';
 import 'package:hedieaty_app/models/gift.dart';
 
@@ -46,6 +47,34 @@ class _GiftListPageState extends State<GiftListPage> {
       });
     }
   }
+
+  Future<void> publishGifts(List<Gift> localGifts, int userID) async {
+    try {
+      // Fetch all gifts from Firestore for the current user
+      List<Gift> firestoreGifts = await FirestoreGiftService.getGiftsByUserID(userID);
+
+      // Convert Firestore gifts to a map for quick lookup
+      Map<int, Gift> firestoreGiftsMap = {
+        for (var gift in firestoreGifts) gift.id!: gift,
+      };
+
+      // Loop through local gifts for the current user
+      for (Gift gift in localGifts.where((gift) => gift.userID == userID)) {
+        if (firestoreGiftsMap.containsKey(gift.id)) {
+          // If the gift exists in Firestore, update it
+          await FirestoreGiftService.updateGiftInFirestore(gift);
+        } else {
+          // If the gift doesn't exist in Firestore, add it
+          await FirestoreGiftService.addGiftToFirestore(gift);
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to publish gifts for user $userID: $e');
+    }
+  }
+
+
+
 
   Future<void> getEvents(int userID) async {
     try {
@@ -206,8 +235,22 @@ class _GiftListPageState extends State<GiftListPage> {
     );
   }
 
+  Future<void> _navigateAndRefreshGift(Gift gift) async {
+    // Navigate to gift details and wait for result
+    final result = await Navigator.pushNamed(
+      context,
+      '/GiftDetailsPage',
+      arguments: gift,
+    );
 
-  @override
+    // If the result is a Gift object, it means the gift was updated
+    if (result is Gift) {
+      fetchGifts(result.userID); // Refresh the entire gift list
+      FirestoreGiftService.updateGiftInFirestore(result);
+    }
+}
+
+    @override
   Widget build(BuildContext context) {
     final userID = ModalRoute.of(context)!.settings.arguments as int;
     return Scaffold(
@@ -226,83 +269,124 @@ class _GiftListPageState extends State<GiftListPage> {
         ),
         backgroundColor: MyColors.navy,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : gifts.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'asset/empty_gift.png',
-              width: 250,
-              height: 400,
-            ),
-            const Text(
-              'No Gifts to Display!',
-              style: TextStyle(
-                fontSize: 25,
-                color: MyColors.orange,
+      body: Column(
+        children: [
+          Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : gifts.isEmpty
+                  ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'asset/empty_gift.png',
+                      width: 250,
+                      height: 400,
+                    ),
+                    const Text(
+                      'No Gifts to Display!',
+                      style: TextStyle(
+                        fontSize: 25,
+                        color: MyColors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+                  : ListView.builder(
+                itemCount: gifts.length,
+                itemBuilder: (context, index) {
+                  Gift gift = gifts[index];
+                  return GestureDetector(
+                    onTap: () => _navigateAndRefreshGift(gift),
+                    child: Card(
+                      color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: CircleAvatar(
+                              radius: 40,
+                              backgroundImage: AssetImage(
+                                gift.imagePath ?? 'asset/gift.png',
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    gift.name,
+                                    style: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Description: ${gift.description}",
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.white),
+                            onPressed: () {
+                              if (gift.status != "Pledged") {
+                                deleteGift(gift);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MyColors.navy,
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onPressed: () async {
+                try {
+                  await publishGifts(gifts, userID); // Call the publish function
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gifts published successfully!')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to publish gifts: $e')),
+                  );
+                }
+              },
+              child: const Text(
+                "Publish Gifts",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: MyColors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ],
-        ),
-      )
-          : ListView.builder(
-        itemCount: gifts.length,
-        itemBuilder: (context, index) {
-          Gift gift = gifts[index];
-          return Card(
-            color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage(
-                      gift.imagePath ?? 'asset/gift.png',
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          gift.name,
-                          style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Description: ${gift.description}",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.white),
-                  onPressed: () {
-                    if (gift.status != "Pledged") {
-                      deleteGift(gift);
-                    }
-                  },
-                ),
-              ],
-            ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showAddGiftDialog(userID),

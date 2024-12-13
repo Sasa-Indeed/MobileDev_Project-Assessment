@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/firebase_services/firebase_auth_services.dart';
 import '../custom_widgets/colors.dart';
 import 'package:hedieaty_app/models/user.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
@@ -67,41 +68,43 @@ class _SignupScreenState extends State<SignupScreen> {
     final password = _passwordController.text.trim();
     final Cpassword = _confirmPasswordController.text.trim();
 
-    if(name.isEmpty || email.isEmpty || phone.isEmpty
-        || password.isEmpty || _selectedPreferences.isEmpty || _selectedProfileImage == null){
+    if (name.isEmpty ||
+        email.isEmpty ||
+        phone.isEmpty ||
+        password.isEmpty ||
+        _selectedPreferences.isEmpty ||
+        _selectedProfileImage == null) {
       _showPopup(context, "Missing Field(s)", "Please enter the data in all the fields.");
       return;
     }
 
-    if(password != Cpassword){
+    if (password != Cpassword) {
       _showPopup(context, "Password Mismatch", "Please enter the password again.");
       return;
-    }else if(!_isValidEmail(email)){
+    } else if (!_isValidEmail(email)) {
       _showPopup(context, "Invalid Email", "Please enter a valid email address.");
       return;
     }
 
-    User user = User(
-      name: name,
-      email: email,
-      password: password,
-      phoneNumber: phone,
-      isNotificationEnabled: _notificationsEnabled,
-      preferences: _selectedPreferences,
-      profileImagePath: _selectedProfileImage!,
-    );
+    try {
+      final Userdb? user = await FirebaseAuthServices().signupUser(
+        name: name,
+        email: email,
+        password: password,
+        phone: phone,
+        preferences: _selectedPreferences,
+        profileImagePath: _selectedProfileImage!,
+        isNotificationEnabled: _notificationsEnabled,
+      );
 
-    int userId = await UserDatabaseServices.insertUser(user);
-    user.id = userId;
-
-    if(userId < 0){
-      _showPopup(context, "User Already Exists", "Please enter a new email address or sign in.");
-      return;
-    }else{
-      Navigator.pushNamed(context, '/Home', arguments: user);
+      if (user != null) {
+        Navigator.pushNamed(context, '/Home', arguments: user);
+      }
+    } catch (e) {
+      _showPopup(context, "Error", e.toString());
     }
-
   }
+
 
   @override
   Widget build(BuildContext context) {

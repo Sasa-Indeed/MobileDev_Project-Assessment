@@ -1,10 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'package:hedieaty_app/firebase_services/firebase_auth_services.dart';
 import 'package:hedieaty_app/models/user.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
 import 'package:hedieaty_app/database/databaseVersionControl.dart';
-
-
 
 
 class LoginScreen extends StatefulWidget {
@@ -22,7 +22,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> initializeDatabase() async {
     //await DatabaseVersionControl.deleteDBs();
     await DatabaseVersionControl.initializeDatabase();
-    print("Database connected!");
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+    print("Initialization Complete!");
   }
 
 
@@ -48,7 +50,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _loginUser(BuildContext context) async {
-    // Validate email format
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -58,21 +59,19 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      // Fetch user from database
-      User? user = await UserDatabaseServices.getUserByEmail(email, password);
+      final Userdb? user = await FirebaseAuthServices().loginUser(
+        email: email,
+        password: password,
+      );
 
-      if (user == null) {
-        // User not found
-        _showPopup(context, "Login Failed", "Incorrect email or password.");
-      } else {
-        // Login successful, navigate to Home
+      if (user != null) {
         Navigator.pushNamed(context, '/Home', arguments: user);
       }
     } catch (e) {
-      // Handle any errors that occur during database operations
-      _showPopup(context, "Error", "An error occurred while logging in. Please try again.");
+      _showPopup(context, "Login Failed", e.toString());
     }
   }
+
 
   @override
   void initState() {

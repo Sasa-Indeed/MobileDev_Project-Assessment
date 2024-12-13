@@ -1,4 +1,4 @@
-class User{
+class Userdb{
   int? id;
   String name;
   List<String> preferences;
@@ -9,7 +9,7 @@ class User{
   bool isNotificationEnabled;
 
 
-  User({required this.name,
+  Userdb({required this.name,
         required this.preferences,
         required this.email,
         required this.password,
@@ -18,7 +18,7 @@ class User{
         required this.isNotificationEnabled,
         this.id});
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
+  factory Userdb.fromJson(Map<String, dynamic> json) => Userdb(
       id: json['id'],
       name: json['name'],
       preferences: [],
