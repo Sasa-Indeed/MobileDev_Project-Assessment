@@ -15,22 +15,45 @@ class FirestoreGiftService {
     }
   }
 
-  /// Add a new gift to Firestore using its local ID as the Firestore document ID
+  /// Add a new gift to Firestore with auto-generated document ID
   static Future<void> addGiftToFirestore(Gift gift) async {
     try {
-      await _giftCollection.doc(gift.id.toString()).set(gift.toFirestore());
+      await _giftCollection.add(gift.toFirestore());
     } catch (e) {
       throw Exception('Failed to add gift for user ${gift.userID}: $e');
     }
   }
 
   /// Update an existing gift in Firestore
+  /// Finds the gift by its `id` field and updates it
   static Future<void> updateGiftInFirestore(Gift gift) async {
     try {
-      await _giftCollection.doc(gift.id.toString()).update(gift.toFirestore());
+      QuerySnapshot snapshot = await _giftCollection.where('id', isEqualTo: gift.id).get();
+
+      if (snapshot.docs.isEmpty) {
+        throw Exception('Gift with id ${gift.id} not found in Firestore.');
+      }
+
+      // Update the first matching document
+      await snapshot.docs.first.reference.update(gift.toFirestore());
     } catch (e) {
       throw Exception('Failed to update gift for user ${gift.userID}: $e');
     }
   }
-}
 
+  /// Delete a gift from Firestore by its `id` field
+  static Future<void> deleteGiftByID(int giftID) async {
+    try {
+      QuerySnapshot snapshot = await _giftCollection.where('id', isEqualTo: giftID).get();
+
+      if (snapshot.docs.isEmpty) {
+        throw Exception('Gift not found in Firestore.');
+      }
+
+      // Delete the first matching document
+      await snapshot.docs.first.reference.delete();
+    } catch (e) {
+      throw Exception('Failed to delete: $e');
+    }
+  }
+}

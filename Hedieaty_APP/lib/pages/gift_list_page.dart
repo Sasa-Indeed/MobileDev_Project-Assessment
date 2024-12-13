@@ -117,12 +117,13 @@ class _GiftListPageState extends State<GiftListPage> {
   Future<void> deleteGift(Gift gift) async {
     try {
       await GiftDatabaseServices.deleteGift(gift);
-      fetchGifts(gift.userID);
+      await FirestoreGiftService.deleteGiftByID(gift.id!);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete gift: $e')),
       );
     }
+    fetchGifts(gift.userID);
   }
 
   void showAddGiftDialog(int userID) {
