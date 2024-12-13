@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Event{
-  final int? id;
+  int? id;
   final String name;
   final DateTime date;
   final String location;
@@ -39,4 +41,33 @@ class Event{
   String toString() {
     return "{ID: $id Name: $name Date: $date Location: $location Category: $category Description: $description UserID: $userID}";
   }
+
+  // Convert Firestore data to a Event object
+  factory Event.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Event(
+      id: data['id'],
+      name: data['name'],
+      date: (data['date'] as Timestamp).toDate(),
+      location: data['location'],
+      description: data['description'],
+      category: data['category'],
+      userID: data['userID'],
+    );
+  }
+
+  // Convert Event object to Firestore-compatible map
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'name': name,
+      'date': Timestamp.fromDate(date),
+      'location': location,
+      'description': description,
+      'category': category,
+      'userID': userID,
+    };
+  }
+
+
 }

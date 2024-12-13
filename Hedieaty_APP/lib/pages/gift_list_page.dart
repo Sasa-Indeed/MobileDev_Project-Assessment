@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
 import 'package:hedieaty_app/database/gift_database_services.dart';
-import 'package:hedieaty_app/firebase_services/firestore_gift_service.dart';
+import 'package:hedieaty_app/firebase_services/firebase_gift_service.dart';
 import 'package:hedieaty_app/models/event.dart';
 import 'package:hedieaty_app/models/gift.dart';
 

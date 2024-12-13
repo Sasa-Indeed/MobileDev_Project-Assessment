@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/firebase_services/firebase_event_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
@@ -112,37 +113,39 @@ class _EventListPageState extends State<EventListPage> {
 
         return AlertDialog(
           title: const Text("Add New Event"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(hintText: "Event Name"),
-                onChanged: (value) => newName = value,
-              ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Location"),
-                onChanged: (value) => newLocation = value,
-              ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Category"),
-                onChanged: (value) => newCategory = value,
-              ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Description"),
-                onChanged: (value) => newDescription = value,
-              ),
-              TextButton(
-                child: Text(newDate != null
-                    ? "Date & Time: ${_formatDateTime(newDate!)} ${_formatTime(newDate!)}"
-                    : "Pick Date & Time"),
-                onPressed: () async {
-                  DateTime? pickedDateTime = await _pickDateTime(context);
-                  setState(() {
-                    newDate = pickedDateTime ?? DateTime.now();
-                  });
-                },
-              ),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(hintText: "Event Name"),
+                  onChanged: (value) => newName = value,
+                ),
+                TextField(
+                  decoration: const InputDecoration(hintText: "Location"),
+                  onChanged: (value) => newLocation = value,
+                ),
+                TextField(
+                  decoration: const InputDecoration(hintText: "Category"),
+                  onChanged: (value) => newCategory = value,
+                ),
+                TextField(
+                  decoration: const InputDecoration(hintText: "Description"),
+                  onChanged: (value) => newDescription = value,
+                ),
+                TextButton(
+                  child: Text(newDate != null
+                      ? "Date & Time: ${_formatDateTime(newDate!)} ${_formatTime(newDate!)}"
+                      : "Pick Date & Time"),
+                  onPressed: () async {
+                    DateTime? pickedDateTime = await _pickDateTime(context);
+                    setState(() {
+                      newDate = pickedDateTime ?? DateTime.now();
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -151,23 +154,35 @@ class _EventListPageState extends State<EventListPage> {
             ),
             TextButton(
               child: const Text("Add"),
-              onPressed: () {
+              onPressed: () async {
                 if (newName.isNotEmpty &&
                     newLocation.isNotEmpty &&
                     newCategory.isNotEmpty &&
                     newDescription.isNotEmpty &&
                     newDate != null) {
-                  EventDatabaseServices.insertEvent(
-                    Event(
-                      name: newName,
-                      date: newDate!,
-                      location: newLocation,
-                      category: newCategory,
-                      description: newDescription,
-                      userID: userID,
-                    ),
+                  final newEvent = Event(
+                    name: newName,
+                    date: newDate!,
+                    location: newLocation,
+                    category: newCategory,
+                    description: newDescription,
+                    userID: userID,
                   );
-                  fetchEvents();
+
+                  // Save to local database
+                  int eventID = await EventDatabaseServices.insertEvent(newEvent);
+                  newEvent.id = eventID;
+
+                  // Save to Firebase
+                  try{
+                    await FireStoreEventService.addEventToFirebase(newEvent);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to add event: $e')),
+                    );
+                  }
+
+                  fetchEvents(); // Refresh the event list
                   Navigator.of(context).pop();
                 }
               },
@@ -177,6 +192,7 @@ class _EventListPageState extends State<EventListPage> {
       },
     );
   }
+
 
   void _editEvent(Event event) {
     showDialog(
@@ -259,7 +275,14 @@ class _EventListPageState extends State<EventListPage> {
   }
 
   void _deleteEvent(Event event) async {
-    await EventDatabaseServices.deleteEvent(event.id!);
+    try{
+      await EventDatabaseServices.deleteEvent(event.id!);
+      await FireStoreEventService.deleteEventByID(event.id!);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete event: $e')),
+      );
+    }
     fetchEvents();
   }
 
