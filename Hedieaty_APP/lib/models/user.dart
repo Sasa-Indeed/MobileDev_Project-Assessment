@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Userdb{
-  int? id;
+  final int id;
   String name;
   List<String> preferences;
   String email;
@@ -9,14 +11,15 @@ class Userdb{
   bool isNotificationEnabled;
 
 
-  Userdb({required this.name,
+  Userdb({required this.id,
+        required this.name,
         required this.preferences,
         required this.email,
         required this.password,
         required this.phoneNumber,
         required this.profileImagePath,
         required this.isNotificationEnabled,
-        this.id});
+        });
 
   factory Userdb.fromJson(Map<String, dynamic> json) => Userdb(
       id: json['id'],
@@ -38,4 +41,36 @@ class Userdb{
     'profileImagePath': profileImagePath,
     'isNotificationEnabled': isNotificationEnabled ? 1 : 0,
   };
+
+
+  factory Userdb.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Userdb(
+      id: data['id'],
+      name: data['name'] ?? '',
+      preferences: data['preferences'] != null
+          ? List<String>.from(data['preferences'])
+          : [],
+      email: data['email'] ?? '',
+      password: '', // Avoid storing password from Firestore
+      phoneNumber: data['phoneNumber'] ?? '',
+      profileImagePath: data['profileImagePath'] ?? '',
+      isNotificationEnabled: data['isNotificationEnabled'] ?? false,
+    );
+  }
+
+  // Convert Userdb object to Firestore-compatible map
+  Map<String, dynamic> toFirestore() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'profileImagePath': profileImagePath,
+      'isNotificationEnabled': isNotificationEnabled,
+      'preferences': preferences,
+    };
+  }
+
+
 }

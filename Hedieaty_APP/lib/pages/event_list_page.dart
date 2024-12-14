@@ -175,7 +175,7 @@ class _EventListPageState extends State<EventListPage> {
 
                   // Save to Firebase
                   try{
-                    await FireStoreEventService.addEventToFirebase(newEvent);
+                    await FirebaseEventService.addEventToFirebase(newEvent);
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Failed to add event: $e')),
@@ -277,7 +277,7 @@ class _EventListPageState extends State<EventListPage> {
   void _deleteEvent(Event event) async {
     try{
       await EventDatabaseServices.deleteEvent(event.id!);
-      await FireStoreEventService.deleteEventByID(event.id!);
+      await FirebaseEventService.deleteEventByID(event.id!);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete event: $e')),

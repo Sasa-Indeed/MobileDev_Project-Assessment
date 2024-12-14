@@ -3,6 +3,8 @@ import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
 import 'package:hedieaty_app/database/friends_database_services.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
+import 'package:hedieaty_app/firebase_services/firebase_friend_services.dart';
+import 'package:hedieaty_app/firebase_services/firebase_user_services.dart';
 import 'package:hedieaty_app/models/friends.dart';
 import 'package:hedieaty_app/models/user.dart';
 import 'package:circular_menu/circular_menu.dart';
@@ -26,18 +28,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchFriends();
+      _setupFriendsListener();
     });
   }
 
-  Future<void> _fetchFriends() async {
-    try {
-      List<int> friendIDs = await FriendsDatabaseServices.getFriendsIDs(user.id!);
-      for(int i in friendIDs){
-        print(i);
-      }
-      List<FriendCard> cards = [];
+  void _setupFriendsListener() {
+    FirebaseFriendServices.friendsStream(user.id!).listen((friendIDs) async {
+      // Ensure `friendIDs` field exists in Firestore
+      await FirebaseFriendServices.initializeFriendIDsField(user.id!);
 
+      // Sync local database and Firestore
+      await FriendsDatabaseServices.syncLocalDatabase(user.id!);
+
+      // Fetch and update friend cards for UI
+      List<FriendCard> cards = [];
       for (int friendID in friendIDs) {
         String name = await UserDatabaseServices.getUserNameByID(friendID);
         String profileImagePath = await UserDatabaseServices.getUserProfileImagePath(friendID);
@@ -63,9 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         friendCards = cards;
       });
-    } catch (error) {
-      print("Error fetching friends: $error");
-    }
+    });
   }
 
   void _showAddFriendPopup(BuildContext context, int currentUserID) {
@@ -88,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextButton(
                         onPressed: () => setState(() => isUsingEmail = true),
                         style: TextButton.styleFrom(
-                          backgroundColor: isUsingEmail ? Colors.blue : Colors.grey,
+                          backgroundColor: isUsingEmail ? MyColors.orange : MyColors.navy,
                         ),
                         child: const Text("Email"),
                       ),
@@ -96,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextButton(
                         onPressed: () => setState(() => isUsingEmail = false),
                         style: TextButton.styleFrom(
-                          backgroundColor: isUsingEmail ? Colors.grey : Colors.blue,
+                          backgroundColor: isUsingEmail ? MyColors.navy : MyColors.orange,
                         ),
                         child: const Text("Phone"),
                       ),
@@ -129,26 +131,42 @@ class _HomeScreenState extends State<HomeScreen> {
                       return;
                     }
 
+                    // Check if the user exists in Firestore
                     int friendID = isUsingEmail
-                        ? await UserDatabaseServices.findUserByEmail(input)
-                        : await UserDatabaseServices.findUserByPhoneNumber(input);
+                        ? await FirebaseUserServices.findUserByEmail(input)
+                        : await FirebaseUserServices.findUserByPhoneNumber(input);
 
                     if (friendID == -1) {
                       _showErrorDialog(context, "Friend Not Found", "No user matches the provided information.");
                       return;
                     }
 
-                    bool isAlreadyFriend = await FriendsDatabaseServices.checkFriendExists(user.id!, friendID) != -1;
+                    // Check if already friends
+                    bool isAlreadyFriend = await FriendsDatabaseServices.checkFriendExists(currentUserID, friendID) != -1;
 
                     if (isAlreadyFriend) {
                       _showErrorDialog(context, "Friend Exists", "This friend is already in your list.");
                       return;
                     }
 
-                    await FriendsDatabaseServices.insertFriend(Friend(userID: user.id!, friendID: friendID));
-                    Navigator.pop(context);
-                    _showSuccessDialog(context, "Friend Added", "Friend has been successfully added!");
-                    _fetchFriends(); // Refresh the friends list
+                    try {
+                      // Initialize `friendIDs` field for both users
+                      await FirebaseFriendServices.initializeFriendIDsField(currentUserID);
+                      await FirebaseFriendServices.initializeFriendIDsField(friendID);
+
+                      // Add friend to Firestore for both users
+                      await FirebaseFriendServices.addFriendToFirestore(currentUserID, friendID);
+                      await FirebaseFriendServices.addFriendToFirestore(friendID, currentUserID);
+
+                      // Add to the local database
+                      Friend newFriend = Friend(userID: currentUserID, friendID: friendID);
+                      await FriendsDatabaseServices.insertFriend(newFriend);
+
+                      Navigator.pop(context);
+                      _showSuccessDialog(context, "Friend Added", "Friend has been successfully added!");
+                    } catch (e) {
+                      _showErrorDialog(context, "Error", "Failed to add friend. Please try again.");
+                    }
                   },
                   child: const Text("Add"),
                 ),
@@ -159,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
 
   void _showErrorDialog(BuildContext context, String title, String message) {
     showDialog(

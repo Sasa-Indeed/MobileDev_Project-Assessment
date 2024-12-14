@@ -26,9 +26,11 @@ class FirebaseAuthServices {
 
       // Get Firebase user ID
       String firebaseUserId = userCredential.user!.uid;
+      int userid = DateTime.now().millisecondsSinceEpoch;
 
       // Insert user into local database
       Userdb user = Userdb(
+        id: userid,
         name: name,
         email: email,
         password: password,
@@ -43,19 +45,18 @@ class FirebaseAuthServices {
       if (localUserId < 0) {
         throw Exception("User already exists in the local database. Try changing email or phone number");
       }
-
+      List<int> friends = [];
       // Update Firebase Firestore with user data
       await _firestore.collection("users").doc(firebaseUserId).set({
         "id": localUserId, // Use the local DB ID as the user ID
         "name": name,
         "email": email,
+        "friendIDs": friends,
         "phoneNumber": phone,
         "preferences": preferences,
         "profileImagePath": profileImagePath,
         "isNotificationEnabled": isNotificationEnabled,
       });
-
-      user.id = localUserId;
 
       return user;
     } catch (e) {

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hedieaty_app/models/event.dart';
 
-class FireStoreEventService {
+class FirebaseEventService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final CollectionReference _eventCollection = _firestore.collection('event');
 

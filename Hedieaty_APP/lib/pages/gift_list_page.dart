@@ -51,7 +51,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Future<void> publishGifts(List<Gift> localGifts, int userID) async {
     try {
       // Fetch all gifts from Firestore for the current user
-      List<Gift> firestoreGifts = await FirestoreGiftService.getGiftsByUserID(userID);
+      List<Gift> firestoreGifts = await FirebaseGiftService.getGiftsByUserID(userID);
 
       // Convert Firestore gifts to a map for quick lookup
       Map<int, Gift> firestoreGiftsMap = {
@@ -62,10 +62,10 @@ class _GiftListPageState extends State<GiftListPage> {
       for (Gift gift in localGifts.where((gift) => gift.userID == userID)) {
         if (firestoreGiftsMap.containsKey(gift.id)) {
           // If the gift exists in Firestore, update it
-          await FirestoreGiftService.updateGiftInFirestore(gift);
+          await FirebaseGiftService.updateGiftInFirestore(gift);
         } else {
           // If the gift doesn't exist in Firestore, add it
-          await FirestoreGiftService.addGiftToFirestore(gift);
+          await FirebaseGiftService.addGiftToFirestore(gift);
         }
       }
     } catch (e) {
@@ -117,7 +117,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Future<void> deleteGift(Gift gift) async {
     try {
       await GiftDatabaseServices.deleteGift(gift);
-      await FirestoreGiftService.deleteGiftByID(gift.id!);
+      await FirebaseGiftService.deleteGiftByID(gift.id!);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete gift: $e')),
@@ -247,7 +247,7 @@ class _GiftListPageState extends State<GiftListPage> {
     // If the result is a Gift object, it means the gift was updated
     if (result is Gift) {
       fetchGifts(result.userID); // Refresh the entire gift list
-      FirestoreGiftService.updateGiftInFirestore(result);
+      FirebaseGiftService.updateGiftInFirestore(result);
     }
 }
 

@@ -69,7 +69,7 @@ class UserDatabaseServices {
     );
 
     for (Userdb user in users) {
-      user.preferences = await _getUserPreferences(user.id!);
+      user.preferences = await _getUserPreferences(user.id);
     }
 
     return users;
@@ -87,7 +87,7 @@ class UserDatabaseServices {
 
     Userdb user = Userdb.fromJson(userData);
 
-    return user.id!;
+    return user.id;
   }
 
   static Future<int> findUserByEmail(String email) async{
@@ -101,7 +101,21 @@ class UserDatabaseServices {
 
     Userdb user = Userdb.fromJson(userData);
 
-    return user.id!;
+    return user.id;
+  }
+
+  static Future<bool> checkUserByID(int userID) async{
+    final db = await DatabaseVersionControl.getDB(); // Assumes a function to connect to your database
+    final List<Map<String, dynamic>> userResult = await db.query(
+      'User',
+      where: "id = ?",
+      whereArgs: [userID],);
+
+    if(userResult.isEmpty){
+      return false;
+    }
+
+    return true;
   }
 
   static Future<Userdb?> getUserByEmail(String email, String password) async {
