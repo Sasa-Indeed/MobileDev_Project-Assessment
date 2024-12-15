@@ -5,7 +5,7 @@ class FirebaseGiftService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final CollectionReference _giftCollection = _firestore.collection('gift');
 
-  /// Get all gifts for a specific user from Firestore
+  /// Get all gifts for a specific user from Firestore (once)
   static Future<List<Gift>> getGiftsByUserID(int userID) async {
     try {
       QuerySnapshot snapshot = await _giftCollection.where('userID', isEqualTo: userID).get();
@@ -59,16 +59,11 @@ class FirebaseGiftService {
 
   /// Get all gifts for a specific user from Firestore (real-time stream)
   static Stream<List<Gift>> getGiftsStreamByUserID(int userID) {
-    try {
-      return _giftCollection
-          .where('userID', isEqualTo: userID)
-          .snapshots()
-          .map((snapshot) =>
-          snapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList());
-    } catch (e) {
-      throw Exception('Failed to fetch gifts stream for user $userID: $e');
-    }
+    return _giftCollection
+        .where('userID', isEqualTo: userID)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList();
+    });
   }
-
-
 }
