@@ -21,7 +21,13 @@ class FirebaseEventService {
       QuerySnapshot snapshot =
       await _eventCollection.where('userID', isEqualTo: userID).get();
 
-      return snapshot.docs.map((doc) => Event.fromFirestore(doc)).toList();
+      List<Event> events = snapshot.docs.map((doc) => Event.fromFirestore(doc)).toList();
+
+      if(events.isEmpty){
+        [];
+      }
+
+      return events;
     } catch (e) {
       throw Exception('Failed to fetch events: $e');
     }

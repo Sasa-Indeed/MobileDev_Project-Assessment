@@ -49,7 +49,7 @@ class DatabaseVersionControl{
 
         // Create the Gift table
         await db.execute("""CREATE TABLE IF NOT EXISTS Gift (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          id INTEGER PRIMARY KEY,
           name TEXT NOT NULL,
           description TEXT NOT NULL,
           category TEXT NOT NULL,
@@ -81,6 +81,8 @@ class DatabaseVersionControl{
             giftID INTEGER NOT NULL,
             userID INTEGER NOT NULL,
             friendID INTEGER NOT NULL,
+            friendName TEXT NOT NULL,
+            eventName TEXT NOT NULL,
             dueDate TEXT NOT NULL,
             FOREIGN KEY (giftID) REFERENCES Gift(id) ON DELETE CASCADE,
             FOREIGN KEY (userID) REFERENCES User(id) ON DELETE CASCADE,

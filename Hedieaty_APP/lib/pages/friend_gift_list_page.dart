@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'package:hedieaty_app/database/pledges_database_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_gift_service.dart';
+import 'package:hedieaty_app/firebase_services/firebase_pledges_service.dart';
 import 'package:hedieaty_app/models/gift.dart';
+import 'package:hedieaty_app/models/pledges.dart';
 import 'package:hedieaty_app/models/user.dart';
 import 'package:intl/intl.dart';
 
@@ -57,33 +60,66 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
 
   /// Toggle pledge status of a gift.
   Future<void> togglePledge(Gift gift) async {
-    if (gift.dueDate != null && DateTime.now().isAfter(gift.dueDate!)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot unpledge the gift as the due date has passed.')),
-      );
-      return;
-    }
-
     try {
-      Gift updatedGift = gift.copyWith(
-        status: gift.status == "Pledged" ? "Unpledged" : "Pledged",
-      );
-      await FirebaseGiftService.updateGiftInFirestore(updatedGift);
+      final isPledged = gift.status == "Pledged";
 
-      // Optionally show feedback
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            gift.status == "Pledged" ? "Unpledged gift: ${gift.name}" : "Pledged gift: ${gift.name}",
-          ),
-        ),
-      );
+      if (isPledged) {
+        // Check if the user pledged this gift
+        final existingPledges = await PledgeDatabaseServices.getPledgesByGiftID(gift.id!);
+
+        Pledges? matchingPledge;
+        try {
+          matchingPledge = existingPledges.firstWhere((pledge) => pledge.userID == user.id);
+        } catch (e) {
+          matchingPledge = null; // No matching pledge found
+        }
+
+        if (matchingPledge == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('You have not pledged this gift.')),
+          );
+          return;
+        }
+
+        // Remove pledge from database and Firebase
+        await PledgeDatabaseServices.deletePledge(matchingPledge.id!);
+        await FirebasePledgesService.deletePledgeByUserID(user.id);
+
+        // Update gift status in Firebase
+        await FirebaseGiftService.updateGiftInFirestore(gift.copyWith(status: "Unpledged"));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unpledged gift: ${gift.name}')),
+        );
+      } else {
+        // Create a new pledge
+        final newPledge = Pledges(
+          giftID: gift.id,
+          userID: user.id,
+          friendID: friendID,
+          dueDate: gift.dueDate,
+          friendName: friendName,
+          eventName: gift.eventName ?? "Unknown",
+        );
+
+        // Add pledge to database and Firebase
+        await PledgeDatabaseServices.insertPledge(newPledge);
+        await FirebasePledgesService.addPledgeToFirestore(newPledge);
+
+        // Update gift status in Firebase
+        await FirebaseGiftService.updateGiftInFirestore(gift.copyWith(status: "Pledged"));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pledged gift: ${gift.name}')),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update gift: $e')),
+        SnackBar(content: Text('Failed to toggle pledge status: $e')),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

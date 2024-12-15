@@ -1,5 +1,6 @@
 /*
 @TODO
-  - In the Home page make the page get the events from the firestore
+  - Add the property gift name to the pledge class
+  - Implement notifications
 */
 

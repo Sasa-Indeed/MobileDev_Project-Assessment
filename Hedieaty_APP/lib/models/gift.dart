@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Gift {
-  final int? id;
+  final int id;
   final String name;
   final String description;
   final String category;
@@ -15,7 +15,7 @@ class Gift {
 
   Gift({required this.name, required this.description, required this.category,
   required this.price, required this.status, required this.eventID, required this.userID,
-  this.id, this.imagePath, required this.dueDate, required this.eventName});
+  required this.id, this.imagePath, required this.dueDate, required this.eventName});
 
   factory Gift.fromJson(Map<String, dynamic> json) => Gift(
     id: json['id'],

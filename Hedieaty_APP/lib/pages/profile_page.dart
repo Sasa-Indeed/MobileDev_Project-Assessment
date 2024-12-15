@@ -203,7 +203,7 @@ class _ProfileScreen extends State<ProfileScreen> {
                       horizontal: 30, vertical: 15),
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/PledgedGiftsPage');
+                  Navigator.pushNamed(context, '/PledgedGiftsPage', arguments: user.id);
                 },
                 child: const Text("My Pledged Gifts",
                     style: TextStyle(

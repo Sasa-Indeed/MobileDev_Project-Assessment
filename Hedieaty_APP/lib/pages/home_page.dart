@@ -3,6 +3,7 @@ import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
 import 'package:hedieaty_app/database/friends_database_services.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
+import 'package:hedieaty_app/firebase_services/firebase_event_service.dart';
 import 'package:hedieaty_app/firebase_services/firebase_friend_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_user_services.dart';
 import 'package:hedieaty_app/models/friends.dart';
@@ -32,6 +33,19 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Event? _getMostRecentFutureEvent(List<Event> events) {
+    final today = DateTime.now();
+
+    // Filter out past and today's events, and keep only future events
+    final futureEvents = events.where((event) => event.date.isAfter(today)).toList();
+
+    // Return the event with the earliest future date, or null if no future events exist
+    return futureEvents.isNotEmpty
+        ? futureEvents.reduce((a, b) => a.date.isBefore(b.date) ? a : b)
+        : null;
+  }
+
+
   void _setupFriendsListener() {
     FirebaseFriendServices.friendsStream(user.id).listen((friendIDs) async {
       // Ensure `friendIDs` field exists in Firestore
@@ -45,8 +59,17 @@ class _HomeScreenState extends State<HomeScreen> {
       for (int friendID in friendIDs) {
         String name = await UserDatabaseServices.getUserNameByID(friendID);
         String profileImagePath = await UserDatabaseServices.getUserProfileImagePath(friendID);
-        List<Event> events = await EventDatabaseServices.getUpcomingEventsByUserID(friendID);
-        String mostRecentEvent = events.isNotEmpty ? events.first.name : 'No upcoming events';
+        List<Event> events = await FirebaseEventService.getEventsByUserID(friendID);
+        String mostRecentEvent = 'No upcoming events';
+
+
+        if(events.isNotEmpty) {
+          Event? recentEvent = _getMostRecentFutureEvent(events);
+          if(recentEvent != null){
+            mostRecentEvent = recentEvent.name;
+          }
+        }
+
 
         cards.add(
           FriendCard(
@@ -239,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ? const Center(
           child: Text(
             "No friends yet, Add Friends to have fun!",
-            style: TextStyle(fontSize: 20, color: Colors.grey),
+            style: TextStyle(fontSize: 25, color: MyColors.orange),
           ),
         )
             : ListView(children: friendCards),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/database/gift_database_services.dart';
+import 'package:hedieaty_app/database/pledges_database_services.dart';
+import 'package:hedieaty_app/firebase_services/firebase_pledges_service.dart';
 import 'package:intl/intl.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
-
+import 'package:hedieaty_app/models/pledges.dart';
 
 class PledgedGiftsPage extends StatefulWidget {
   const PledgedGiftsPage({super.key});
@@ -11,114 +14,86 @@ class PledgedGiftsPage extends StatefulWidget {
 }
 
 class _PledgedGiftsPageState extends State<PledgedGiftsPage> {
+  List<Pledges> pledgedGifts = [];
+  bool isLoading = true;
+  late int userID;
 
-  List<PledgedGift> pledgedGifts = [
-    PledgedGift(giftName: "Watch", friendName: "John Doe", dueDate: DateTime.now().subtract(Duration(days: 5)), isPledged: true),
-    PledgedGift(giftName: "Book", friendName: "Jane Smith", dueDate:  DateTime.now().add(Duration(days: 10)), isPledged: false),
-    // Add more sample data as needed
-  ];
-
-  Future<DateTime?> _pickDateTime(BuildContext context) async {
-    // Step 1: Pick the date
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    // If no date is selected, return null
-    if (pickedDate == null) return null;
-
-    // Step 2: Combine the picked date and time into a DateTime object
-    final DateTime combinedDateTime = DateTime(
-      pickedDate.year,
-      pickedDate.month,
-      pickedDate.day,
-    );
-
-    return combinedDateTime;
-  }
-
-  void _addGift() {
-    setState(() {
-      pledgedGifts.add(PledgedGift(
-          giftName: "PlaceHolder",
-          friendName: "PlaceHolder",
-          dueDate: DateTime.now(),
-          isPledged: true));
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is int) {
+        setState(() {
+          userID = args;
+        });
+        fetchPledges(); // Fetch data only after `userID` is set
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User ID is missing.')),
+        );
+      }
     });
   }
 
-  void _editGift(int index) {
-    final gift = pledgedGifts[index];
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Edit Pledge"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(labelText: "Gift Name"),
-                onChanged: (value) {
-                  setState(() {
-                    gift.giftName = value;
-                  });
-                },
-              ),
-              TextField(
-                decoration: const InputDecoration(labelText: "Friend Name"),
-                onChanged: (value) {
-                  setState(() {
-                    gift.friendName = value;
-                  });
-                },
-              ),
-              TextButton(
-                child:  Text("Date: ${_formatDateTime(gift.dueDate)}"),
-                onPressed: () async {
-                  DateTime? pickedDate = await _pickDateTime(context);
-                  setState(() {
-                    if(pickedDate != null){
-                      gift.dueDate = pickedDate;
-                    }else{
-                      gift.dueDate = DateTime.now();
-                    }
-                  });
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  pledgedGifts[index] = gift;
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
+
+  /// Fetch pledges from the database
+  Future<void> fetchPledges() async {
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      List<Pledges> pledges = await PledgeDatabaseServices.getPledgesByUserID(userID);
+      setState(() {
+        pledgedGifts = pledges;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load pledges: $e')),
+      );
+    }
   }
 
-  void _removeGift(int index) {
+  /// Remove a pledge from both the Firebase and the local database
+  Future<void> _removePledge(int index) async {
+    final Pledges pledge = pledgedGifts[index];
+    final DateTime fourDaysAfterDue = pledge.dueDate.add(const Duration(days: 4));
+
+    if (DateTime.now().isBefore(fourDaysAfterDue)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You can only delete a pledge 4 days after its due date.'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       pledgedGifts.removeAt(index);
     });
+
+    try {
+      // Remove from Firebase
+      await FirebasePledgesService.deletePledgeByUserID(userID);
+
+      // Remove from local database
+      await PledgeDatabaseServices.deletePledge(pledge.id!);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Pledge for ${pledge.friendName} deleted successfully.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete pledge: $e')),
+      );
+    }
   }
 
+  /// Format the date for display
   String _formatDateTime(DateTime dateTime) {
     return DateFormat('dd-MM-yyyy').format(dateTime);
   }
@@ -129,7 +104,7 @@ class _PledgedGiftsPageState extends State<PledgedGiftsPage> {
       backgroundColor: MyColors.gray,
       appBar: AppBar(
         iconTheme: const IconThemeData(
-          color: MyColors.orange, // Set the back arrow color
+          color: MyColors.orange,
         ),
         title: const Padding(
           padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
@@ -145,94 +120,100 @@ class _PledgedGiftsPageState extends State<PledgedGiftsPage> {
         centerTitle: true,
         backgroundColor: MyColors.navy,
       ),
-      body: ListView.builder(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : pledgedGifts.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'asset/empty_gift.png',
+              width: 250,
+              height: 400,
+            ),
+            const Text(
+              'No Pledges to Display!',
+              style: TextStyle(
+                fontSize: 25,
+                color: MyColors.orange,
+              ),
+            ),
+          ],
+        ),
+      )
+          : ListView.builder(
         itemCount: pledgedGifts.length,
         itemBuilder: (context, index) {
-          final gift = pledgedGifts[index];
+          final pledge = pledgedGifts[index];
+          final bool isPastDue = pledge.dueDate.isBefore(DateTime.now());
+          final bool canDelete =
+          DateTime.now().isAfter(pledge.dueDate.add(const Duration(days: 4)));
+
           return Card(
             color: MyColors.blue,
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: ListTile(
               title: Text(
-                  gift.giftName,
-                  style: TextStyle(
-                    color: gift.dueDate.isBefore(DateTime.now()) ? MyColors.orange.withOpacity(0.5) : MyColors.orange,
-                    fontFamily: "playWrite",
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  ),
+                GiftDatabaseServices.getGiftNameByGiftID(pledge.giftID),
+                style: TextStyle(
+                  color: isPastDue
+                      ? MyColors.orange.withOpacity(0.5)
+                      : MyColors.orange,
+                  fontFamily: "playWrite",
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 5,),
+                  const SizedBox(height: 5),
                   Text(
-                      "Friend: ${gift.friendName}",
-                      style: TextStyle(
-                        color: gift.dueDate.isBefore(DateTime.now()) ? MyColors.gray.withOpacity(0.5) : MyColors.gray,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    "Event: ${pledge.eventName}",
+                    style: TextStyle(
+                      color: isPastDue
+                          ? MyColors.gray.withOpacity(0.5)
+                          : MyColors.gray,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 8,),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Friend: ${pledge.friendName}",
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
                   Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: (gift.dueDate.isBefore(DateTime.now())) ? Colors.red : Colors.green,
+                      color: isPastDue ? Colors.red : Colors.green,
                       borderRadius: BorderRadius.circular(15),
                     ),
-                      child: Text(
-                        "Due Date: ${_formatDateTime(gift.dueDate)}",
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    child: Text("Due Date: ${_formatDateTime(pledge.dueDate)}",
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
                   ),
                 ],
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!gift.dueDate.isBefore(DateTime.now()))
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      color: MyColors.gray,
-                      onPressed: () => _editGift(index),
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    color: MyColors.gray,
-                    onPressed: () => _removeGift(index),
-                  ),
-                ],
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                color: MyColors.gray,
+                onPressed: canDelete
+                    ? () => _removePledge(index)
+                    : null,
               ),
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: _addGift,
-          backgroundColor: MyColors.navy,
-          tooltip: 'Add Event',
-          child: const Icon(
-            Icons.add,
-            color: MyColors.orange,
-          ),
-      ),
     );
   }
-}
-
-class PledgedGift {
-  String giftName;
-  String friendName;
-  DateTime dueDate;
-  bool isPledged;
-
-  PledgedGift({
-      required this.giftName,
-      required this.friendName,
-      required this.dueDate,
-      this.isPledged = false});
 }

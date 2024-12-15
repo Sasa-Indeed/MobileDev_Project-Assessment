@@ -53,6 +53,21 @@ class GiftDatabaseServices{
       return Gift.fromJson(maps.first);
     }
 
+    static Future<String> getGiftNameByGiftID(int giftID) async{
+      final db = await DatabaseVersionControl.getDB();
+
+      final List<Map<String, dynamic>> maps = await db.query(
+          "Gift",
+          where: 'id = ?',
+          whereArgs: [giftID]);
+
+      if(maps.isEmpty){
+        return "Unknown";
+      }
+
+      return Gift.fromJson(maps.first).name;
+    }
+
 
     static Future<List<Gift>> getAllGiftsByUserID(int userID) async{
       final db = await DatabaseVersionControl.getDB();

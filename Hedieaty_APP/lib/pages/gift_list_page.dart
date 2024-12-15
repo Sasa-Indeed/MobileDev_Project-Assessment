@@ -169,8 +169,9 @@ class _GiftListPageState extends State<GiftListPage> {
     String? imagePath,
   }) async {
     Event? event = await EventDatabaseServices.getEventsByUserIDandEventID(userID, eventID);
-
+    int giftID = DateTime.now().millisecondsSinceEpoch;
     Gift newGift = Gift(
+        id: giftID,
         name: name,
         description: description,
         category: category,
