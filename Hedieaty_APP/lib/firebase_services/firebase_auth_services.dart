@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
+import 'package:hedieaty_app/firebase_services/firebase_user_services.dart';
 import 'package:hedieaty_app/models/user.dart';
 
 class FirebaseAuthServices {
@@ -81,9 +82,13 @@ class FirebaseAuthServices {
       // Fetch user data from local database
       Userdb? user = await UserDatabaseServices.getUserByEmail(email, password);
 
-      if (user == null) {
-        throw Exception("User not found in the local database.");
+      user ??= await FirebaseUserServices.fetchUserById(await FirebaseUserServices.findUserByEmail(email));
+
+      if(user == null){
+        throw Exception("User not found in database");
       }
+
+      await UserDatabaseServices.insertUser(user);
 
       // Ensure Firebase and local DB IDs match
       DocumentSnapshot firestoreDoc =

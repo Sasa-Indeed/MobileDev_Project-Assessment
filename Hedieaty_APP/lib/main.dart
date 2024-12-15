@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'pages/friend_gift_list_page.dart';
 import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/gift_list_page.dart';
@@ -20,6 +21,7 @@ void main() {
           "/EventListPage"    : (context) => EventListPage(),
           "/GiftDetailsPage"  : (context) => GiftDetailsPage(),
           "/PledgedGiftsPage" : (context) => PledgedGiftsPage(),
+          "/FriendGiftListPage": (context) => FriendGiftListPage(),
           '/login': (context) => LoginScreen(),
           '/signup': (context) => SignupScreen(),
         },

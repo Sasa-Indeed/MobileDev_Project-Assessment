@@ -55,6 +55,8 @@ class DatabaseVersionControl{
           category TEXT NOT NULL,
           price REAL NOT NULL,
           status TEXT NOT NULL,
+          dueDate TEXT NOT NULL,
+          eventName TEXT NOT NULL,
           eventID INTEGER NOT NULL,
           userID INTEGER NOT NULL,
           imagePath TEXT,

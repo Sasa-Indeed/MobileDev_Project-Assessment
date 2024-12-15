@@ -46,6 +46,20 @@ class EventDatabaseServices{
     );
   }
 
+  static Future<Event?> getEventsByUserIDandEventID(int userId, int eventID) async {
+    final db = await DatabaseVersionControl.getDB();
+
+    final List<Map<String, dynamic>> eventMaps = await db.query(
+      "Event",
+      where: "id = ? AND userID = ?",
+      whereArgs: [eventID, userId],
+    );
+
+    if (eventMaps.isEmpty) return null;
+
+    return Event.fromJson(eventMaps.first);
+  }
+
   // Get an event by ID
   static Future<Event?> getEventById(int eventId) async {
     final db = await DatabaseVersionControl.getDB();

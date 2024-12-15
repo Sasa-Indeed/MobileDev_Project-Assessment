@@ -100,6 +100,9 @@ class _GiftListPageState extends State<GiftListPage> {
     required int userID,
     String? imagePath,
   }) async {
+
+    Event? event = await EventDatabaseServices.getEventsByUserIDandEventID(userID, eventID);
+
     Gift newGift = Gift(
       name: name,
       description: description,
@@ -109,6 +112,8 @@ class _GiftListPageState extends State<GiftListPage> {
       eventID: eventID,
       userID: userID,
       imagePath: imagePath,
+      eventName: event?.name??'',
+      dueDate: event?.date.subtract(const Duration(days: 3)) ?? DateTime.now()
     );
     await GiftDatabaseServices.insertGift(newGift);
     fetchGifts(userID);

@@ -33,12 +33,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _setupFriendsListener() {
-    FirebaseFriendServices.friendsStream(user.id!).listen((friendIDs) async {
+    FirebaseFriendServices.friendsStream(user.id).listen((friendIDs) async {
       // Ensure `friendIDs` field exists in Firestore
-      await FirebaseFriendServices.initializeFriendIDsField(user.id!);
+      await FirebaseFriendServices.initializeFriendIDsField(user.id);
 
       // Sync local database and Firestore
-      await FriendsDatabaseServices.syncLocalDatabase(user.id!);
+      await FriendsDatabaseServices.syncLocalDatabase(user.id);
 
       // Fetch and update friend cards for UI
       List<FriendCard> cards = [];
@@ -56,8 +56,8 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.pushNamed(
                 context,
-                '/FriendDetailsPage',
-                arguments: {'user': user, 'friendID': friendID},
+                '/FriendGiftListPage',
+                arguments: {'user': user, 'friendID': friendID, 'friendName': name},
               );
             },
           ),

@@ -10,11 +10,12 @@ class Gift {
   final int eventID;
   final int userID;
   final String? imagePath; // Local path for the image, nullable
+  String eventName;
+  DateTime dueDate;
 
-
-  const Gift({required this.name, required this.description, required this.category,
+  Gift({required this.name, required this.description, required this.category,
   required this.price, required this.status, required this.eventID, required this.userID,
-  this.id, this.imagePath});
+  this.id, this.imagePath, required this.dueDate, required this.eventName});
 
   factory Gift.fromJson(Map<String, dynamic> json) => Gift(
     id: json['id'],
@@ -25,7 +26,9 @@ class Gift {
     status: json['status'],
     eventID: json['eventID'],
     userID: json['userID'],
-    imagePath: json['imagePath']
+    imagePath: json['imagePath'],
+    eventName: json['eventName'],
+    dueDate: DateTime.parse(json['dueDate'])
   );
 
   Map<String, dynamic> toJson() => {
@@ -37,7 +40,9 @@ class Gift {
   'status': status,
   'eventID': eventID,
   'userID': userID,
-  'imagePath': imagePath
+  'imagePath': imagePath,
+  'eventName':eventName,
+  'dueDate': dueDate.toIso8601String()
   };
 
   Gift copyWith({int? id, String? name, String? description, String? category,
@@ -52,6 +57,8 @@ class Gift {
       eventID: eventID ?? this.eventID,
       userID: userID ?? this.userID,
       imagePath: imagePath ?? this.imagePath,
+      eventName: eventName ?? this.eventName,
+      dueDate:  dueDate ?? this.dueDate
     );
   }
 
@@ -68,6 +75,8 @@ class Gift {
       eventID: data['eventID'],
       userID: data['userID'],
       imagePath: data['imagePath'],
+      eventName: data['eventName'],
+      dueDate: (data['dueDate'] as Timestamp).toDate()
     );
   }
 
@@ -83,6 +92,8 @@ class Gift {
       'eventID': eventID,
       'userID': userID,
       'imagePath': imagePath,
+      'eventName': eventName,
+      'dueDate': Timestamp.fromDate(dueDate)
     };
   }
 

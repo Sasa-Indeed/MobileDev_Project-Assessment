@@ -134,7 +134,10 @@ class FriendsDatabaseServices{
 
       localFriendIDs = await getFriendsIDs(userID);
 
+
+
       for(int friendID in localFriendIDs){
+        print("$friendID \n");
         if(!await UserDatabaseServices.checkUserByID(friendID)){
           Userdb? user = await FirebaseUserServices.fetchUserById(friendID);
           if(user != null){

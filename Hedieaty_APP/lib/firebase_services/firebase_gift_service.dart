@@ -56,4 +56,19 @@ class FirebaseGiftService {
       throw Exception('Failed to delete: $e');
     }
   }
+
+  /// Get all gifts for a specific user from Firestore (real-time stream)
+  static Stream<List<Gift>> getGiftsStreamByUserID(int userID) {
+    try {
+      return _giftCollection
+          .where('userID', isEqualTo: userID)
+          .snapshots()
+          .map((snapshot) =>
+          snapshot.docs.map((doc) => Gift.fromFirestore(doc)).toList());
+    } catch (e) {
+      throw Exception('Failed to fetch gifts stream for user $userID: $e');
+    }
+  }
+
+
 }
