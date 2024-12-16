@@ -155,7 +155,7 @@ class _PledgedGiftsPageState extends State<PledgedGiftsPage> {
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: ListTile(
               title: Text(
-                GiftDatabaseServices.getGiftNameByGiftID(pledge.giftID),
+                pledge.giftName,
                 style: TextStyle(
                   color: isPastDue
                       ? MyColors.orange.withOpacity(0.5)
@@ -185,6 +185,7 @@ class _PledgedGiftsPageState extends State<PledgedGiftsPage> {
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 5),

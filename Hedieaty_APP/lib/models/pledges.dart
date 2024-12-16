@@ -8,6 +8,7 @@ class Pledges{
   final DateTime dueDate;
   final String friendName;
   final String eventName;
+  final String giftName;
 
   Pledges({required this.giftID,
           required this.userID,
@@ -15,6 +16,7 @@ class Pledges{
           required this.dueDate,
           required this.friendName,
           required this.eventName,
+          required this.giftName,
           this.id});
 
   factory Pledges.fromJson(Map<String, dynamic> json) => Pledges(
@@ -24,7 +26,8 @@ class Pledges{
       friendID: json['friendID'],
       dueDate: DateTime.parse(json['dueDate']),
       friendName: json['friendName'],
-      eventName: json['eventName']
+      eventName: json['eventName'],
+      giftName: json['giftName'],
   );
 
   Map<String, dynamic> toJson() => {
@@ -34,7 +37,8 @@ class Pledges{
     'friendID': friendID,
     'dueDate': dueDate.toIso8601String(),
     'friendName': friendName,
-    'eventName': eventName
+    'eventName': eventName,
+    'giftName':giftName
   };
 
 
@@ -47,7 +51,8 @@ class Pledges{
         friendID: data['friendID'],
         dueDate: (data['dueDate'] as Timestamp).toDate(),
         friendName: data['friendName'],
-        eventName: data['eventName']
+        eventName: data['eventName'],
+        giftName: data['giftName'],
     );
   }
 
@@ -59,7 +64,8 @@ class Pledges{
       'friendID': friendID,
       'dueDate': Timestamp.fromDate(dueDate),
       'friendName': friendName,
-      'eventName': eventName
+      'eventName': eventName,
+      'giftName': giftName,
     };
   }
 

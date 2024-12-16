@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
         body: friendCards.isEmpty
             ? const Center(
           child: Text(
-            "No friends yet, Add Friends to have fun!",
+            "No friends yet,\n Add Friends to have fun!",
             style: TextStyle(fontSize: 25, color: MyColors.orange),
           ),
         )

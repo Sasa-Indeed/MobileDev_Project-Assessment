@@ -100,6 +100,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
           dueDate: gift.dueDate,
           friendName: friendName,
           eventName: gift.eventName ?? "Unknown",
+          giftName: gift.name
         );
 
         // Add pledge to database and Firebase

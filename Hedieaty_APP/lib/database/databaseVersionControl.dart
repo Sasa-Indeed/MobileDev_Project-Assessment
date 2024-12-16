@@ -83,6 +83,7 @@ class DatabaseVersionControl{
             friendID INTEGER NOT NULL,
             friendName TEXT NOT NULL,
             eventName TEXT NOT NULL,
+            giftName TEXT NOT NULL,
             dueDate TEXT NOT NULL,
             FOREIGN KEY (giftID) REFERENCES Gift(id) ON DELETE CASCADE,
             FOREIGN KEY (userID) REFERENCES User(id) ON DELETE CASCADE,
