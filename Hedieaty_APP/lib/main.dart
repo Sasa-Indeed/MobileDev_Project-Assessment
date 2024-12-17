@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/Controller/n_service.dart';
 import 'pages/friend_gift_list_page.dart';
 import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
@@ -14,6 +15,7 @@ void main() {
       MaterialApp(
         title: "Hedieaty",
         initialRoute: '/login',
+        navigatorKey: NavigationService().navigatorKey,
         routes: {
           "/Home"             : (context) => HomeScreen(),
           "/ProfilePage"      : (context) => ProfileScreen(),
@@ -28,3 +30,4 @@ void main() {
       )
   );
 }
+

@@ -28,8 +28,6 @@ class FirebaseUserServices {
     }
   }
 
-
-
   /// Finds a user by email in Firestore.
   /// Returns the user ID if found, or -1 if not found.
   static Future<int> findUserByEmail(String email) async {

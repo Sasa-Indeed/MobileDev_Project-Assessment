@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
+import 'package:hedieaty_app/database/notifications_database_services.dart';
 import 'package:hedieaty_app/database/pledges_database_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_gift_service.dart';
+import 'package:hedieaty_app/firebase_services/firebase_notifiacations_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_pledges_service.dart';
 import 'package:hedieaty_app/models/gift.dart';
+import 'package:hedieaty_app/models/notifications.dart';
 import 'package:hedieaty_app/models/pledges.dart';
 import 'package:hedieaty_app/models/user.dart';
 import 'package:intl/intl.dart';
@@ -60,6 +63,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
 
   /// Toggle pledge status of a gift.
   Future<void> togglePledge(Gift gift) async {
+
     try {
       final isPledged = gift.status == "Pledged";
 
@@ -84,6 +88,18 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
         // Remove pledge from database and Firebase
         await PledgeDatabaseServices.deletePledge(matchingPledge.id!);
         await FirebasePledgesService.deletePledgeByUserID(user.id);
+        Notifications unPledgeNotifications = Notifications(
+          title: "${user.name} unpledged ${gift.name}",
+          body: "${user.name} has unpledged ${gift.name} from the event ${gift.eventName}",
+          receiverID: friendID,
+          status: false,
+          timestamp: DateTime.now(),
+        );
+        int notifID = await NotificationDatabaseServices.insertNotification(unPledgeNotifications);
+
+        unPledgeNotifications.id = notifID;
+
+        await FirebaseNotificationsService.addNotification(unPledgeNotifications);
 
         // Update gift status in Firebase
         await FirebaseGiftService.updateGiftInFirestore(gift.copyWith(status: "Unpledged"));
@@ -106,6 +122,20 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
         // Add pledge to database and Firebase
         await PledgeDatabaseServices.insertPledge(newPledge);
         await FirebasePledgesService.addPledgeToFirestore(newPledge);
+
+        Notifications pledgeNotifications = Notifications(
+          title: "${user.name} pledged ${gift.name}",
+          body: "${user.name} has pledged ${gift.name} from the event ${gift.eventName}",
+          receiverID: friendID,
+          status: false,
+          timestamp: DateTime.now(),
+        );
+        int notifID = await NotificationDatabaseServices.insertNotification(pledgeNotifications);
+
+        pledgeNotifications.id = notifID;
+
+        await FirebaseNotificationsService.addNotification(pledgeNotifications);
+
 
         // Update gift status in Firebase
         await FirebaseGiftService.updateGiftInFirestore(gift.copyWith(status: "Pledged"));

@@ -98,6 +98,7 @@ class DatabaseVersionControl{
             title TEXT NOT NULL,
             body TEXT NOT NULL,
             timestamp TEXT NOT NULL,
+            receiverID INTEGER NOT NULL,
             status INTEGER NOT NULL
           );
         """);

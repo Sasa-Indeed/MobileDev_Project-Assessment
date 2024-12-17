@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hedieaty_app/database/gift_database_services.dart';
 import 'package:hedieaty_app/database/pledges_database_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_pledges_service.dart';
 import 'package:intl/intl.dart';

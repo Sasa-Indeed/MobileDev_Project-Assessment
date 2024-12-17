@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/Controller/n_service.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/firebase_services/firebase_auth_services.dart';
 import 'package:hedieaty_app/models/user.dart';
@@ -13,19 +17,70 @@ class LoginScreen extends StatefulWidget {
   State<StatefulWidget> createState() => _LoginScreenState();
 }
 
+Future<void> _firebaseBackgroundMessage(RemoteMessage message) async{
+  if(message.notification != null){
+    print("Some notification Received in background....");
+  }
+}
+
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
+
+
   Future<void> initializeDatabase() async {
     //await DatabaseVersionControl.deleteDBs();
-    await DatabaseVersionControl.initializeDatabase();
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp();
-    print("Initialization Complete!");
-  }
 
+    await DatabaseVersionControl.initializeDatabase();
+
+    //await FirebaseCM2().initNotification();
+
+   /* await PushNotificaiton.init();
+
+    await PushNotificaiton.localNotiInit();
+
+    //Listen to background notification
+    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
+
+    //On background notification tapped
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message){
+      if(message.notification != null) {
+        print("Background Notification Tapped");
+        //Logic for navigation to notification screen
+      }
+    });
+
+    //To handle foreground notifications
+    FirebaseMessaging.onMessage.listen((RemoteMessage message){
+      String payloadData = jsonEncode(message.data);
+      print("Got a mess in foreground");
+      if(message.notification != null){
+        PushNotificaiton.showSimpleNotification(
+            title: message.notification!.title!,
+            body: message.notification!.body!,
+            payload: payloadData);
+      }
+    });
+    
+    
+    //For handling in terminated state 
+    final RemoteMessage? message = await FirebaseMessaging.instance.getInitialMessage();
+    
+    if(message != null){
+      print("Clicked in terminated state");
+    }
+
+    print("Initialization Complete!");*/
+
+/*    AccessTokenFirebase accessTokenFirebase = AccessTokenFirebase();
+    String token = await accessTokenFirebase.getAccessToken();
+
+    print(token);*/
+  }
 
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
@@ -64,6 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (user != null) {
+        //await FirebaseUserServices.updateFCMDeviceToken(user.id);
+        NotificationService().startNotificationListener(user.id);
         Navigator.pushNamed(context, '/Home', arguments: user);
       }
     } catch (e) {
@@ -211,7 +268,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.center,
                           child: OutlinedButton.icon(
-                            onPressed: () {},
+                            onPressed: ()  {
+                            },
                             icon: const Icon(Icons.g_mobiledata, color: Colors.blueAccent, size: 25),
                             label: const Text(
                               "Sign in with Google",

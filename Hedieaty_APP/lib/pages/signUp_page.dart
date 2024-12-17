@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/Controller/n_service.dart';
 import 'package:hedieaty_app/firebase_services/firebase_auth_services.dart';
 import '../custom_widgets/colors.dart';
 import 'package:hedieaty_app/models/user.dart';
@@ -98,6 +99,7 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       if (user != null) {
+        NotificationService().startNotificationListener(user.id);
         Navigator.pushNamed(context, '/Home', arguments: user);
       }
     } catch (e) {

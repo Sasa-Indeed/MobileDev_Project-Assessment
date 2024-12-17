@@ -47,6 +47,10 @@ class FirebaseAuthServices {
         throw Exception("User already exists in the local database. Try changing email or phone number");
       }
       List<int> friends = [];
+
+      //Get the device token for the user
+      //String? deviceToken = await FirebaseCM2.getDeviceToken();
+
       // Update Firebase Firestore with user data
       await _firestore.collection("users").doc(firebaseUserId).set({
         "id": localUserId, // Use the local DB ID as the user ID
