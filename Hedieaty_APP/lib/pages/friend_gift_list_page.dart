@@ -204,9 +204,9 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage(
-                      gift.imagePath ?? 'asset/gift.png',
-                    ),
+                    backgroundImage: (gift.imagePath == null )
+                        ? const AssetImage('asset/gift.png') // Default asset image
+                        : NetworkImage(gift.imagePath!) as ImageProvider<Object>,
                   ),
                 ),
                 Expanded(

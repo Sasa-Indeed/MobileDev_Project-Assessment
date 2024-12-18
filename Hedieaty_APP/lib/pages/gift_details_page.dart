@@ -182,7 +182,9 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage(_gift.imagePath ?? 'asset/gift.png'),
+                    backgroundImage: (_gift.imagePath == null )
+                        ? const AssetImage('asset/gift.png') // Default asset image
+                        : NetworkImage(_gift.imagePath!) as ImageProvider<Object>,
                   ),
                   CircleAvatar(
                     backgroundColor: MyColors.navy,
@@ -307,33 +309,6 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
                       border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: MyColors.blue,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Status: ${_gift.status}',
-                          style: const TextStyle(
-                            color: MyColors.orange,
-                            fontFamily: "playWrite",
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Switch(
-                          activeTrackColor: MyColors.orange,
-                          value: _gift.status == "Pledged",
-                          onChanged: (value) => _togglePledgeStatus(value),
-                        ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(

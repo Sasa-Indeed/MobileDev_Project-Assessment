@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/event_database_services.dart';
@@ -7,6 +6,11 @@ import 'package:hedieaty_app/database/gift_database_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_gift_service.dart';
 import 'package:hedieaty_app/models/event.dart';
 import 'package:hedieaty_app/models/gift.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:permission_handler/permission_handler.dart';
 
 class GiftListPage extends StatefulWidget {
   const GiftListPage({super.key});
@@ -43,6 +47,9 @@ class _GiftListPageState extends State<GiftListPage> {
     _firestoreSubscription.cancel();
     super.dispose();
   }
+
+
+
 
   /// Real-time Firestore sync with local database.
   Future<void> _syncLocalAndFirestoreGifts(List<Gift> firestoreGifts, int userID) async {
@@ -187,6 +194,28 @@ class _GiftListPageState extends State<GiftListPage> {
     _fetchGifts(userID); // Refresh the gift list after adding a new gift
   }
 
+  Future<bool> _requestGalleryPermission() async {
+    Permission permission;
+
+    if (Platform.isAndroid) {
+      permission = Permission.photos; // READ_MEDIA_IMAGES for Android 13+
+    } else if (Platform.isIOS) {
+      permission = Permission.photos;
+    } else {
+      return false; // Unsupported platform
+    }
+
+    PermissionStatus status = await permission.request();
+
+    if (status.isPermanentlyDenied) {
+      await openAppSettings(); // Direct the user to app settings
+      return false;
+    }
+
+    return status.isGranted;
+  }
+
+
   void _showAddGiftDialog(int userID) {
     if (upcomingEvents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -199,8 +228,11 @@ class _GiftListPageState extends State<GiftListPage> {
     String newDescription = '';
     String newCategory = '';
     double newPrice = 0.0;
-    String? newImagePath;
-    Event? selectedEvent = upcomingEvents.first; // Initialize with the first event
+    String? newImageURL; // To hold the uploaded URL after confirmation
+    Event? selectedEvent = upcomingEvents.first; // Default selected event
+    File? localImageFile; // Local file for image preview
+
+    final ImagePicker picker = ImagePicker();
 
     showDialog(
       context: context,
@@ -213,32 +245,68 @@ class _GiftListPageState extends State<GiftListPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Gift Name
                     TextField(
                       decoration: const InputDecoration(hintText: "Gift Name"),
                       onChanged: (value) => newName = value,
                     ),
                     const SizedBox(height: 10),
+
+                    // Description
                     TextField(
                       decoration: const InputDecoration(hintText: "Description"),
                       onChanged: (value) => newDescription = value,
                     ),
                     const SizedBox(height: 10),
+
+                    // Category
                     TextField(
                       decoration: const InputDecoration(hintText: "Category"),
                       onChanged: (value) => newCategory = value,
                     ),
                     const SizedBox(height: 10),
+
+                    // Price
                     TextField(
                       decoration: const InputDecoration(hintText: "Price"),
                       keyboardType: TextInputType.number,
                       onChanged: (value) => newPrice = double.tryParse(value) ?? 0.0,
                     ),
                     const SizedBox(height: 10),
-                    TextField(
-                      decoration: const InputDecoration(hintText: "Image Path (optional)"),
-                      onChanged: (value) => newImagePath = value,
+
+                    // Image Preview
+                    localImageFile != null
+                        ? Image.file(
+                      localImageFile!,
+                      height: 100,
+                      width: 100,
+                      fit: BoxFit.cover,
+                    )
+                        : const Text("No image selected."),
+                    const SizedBox(height: 10),
+
+                    // Pick Image Button
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Pick an image file using ImagePicker
+                        final XFile? pickedFile =
+                        await picker.pickImage(source: ImageSource.gallery);
+                        if (pickedFile != null) {
+                          setState(() {
+                            localImageFile = File(pickedFile.path);
+                            newImageURL = null; // Clear previous URL
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("No image selected.")),
+                          );
+                        }
+                      },
+                      child: const Text("Pick Image"),
                     ),
                     const SizedBox(height: 10),
+
+                    // Event Dropdown
                     DropdownButton<Event>(
                       value: selectedEvent,
                       isExpanded: true,
@@ -258,33 +326,53 @@ class _GiftListPageState extends State<GiftListPage> {
                 ),
               ),
               actions: [
+                // Cancel Button
                 TextButton(
                   child: const Text("Cancel"),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
+
+                // Add Button
                 TextButton(
                   child: const Text("Add"),
                   onPressed: () async {
+                    // Validate fields
                     if (newName.isNotEmpty &&
                         newDescription.isNotEmpty &&
                         newCategory.isNotEmpty &&
                         newPrice > 0 &&
                         selectedEvent != null &&
-                        selectedEvent?.id != null) {
-                      await _addGift(
-                        name: newName,
-                        description: newDescription,
-                        category: newCategory,
-                        price: newPrice,
-                        status: 'Pending',
-                        eventID: selectedEvent?.id ?? 0,
-                        userID: userID,
-                        imagePath: newImagePath,
-                      );
-                      Navigator.of(context).pop();
+                        localImageFile != null) {
+                      // Upload image only when all fields are validated
+                      String? uploadedImageUrl = await _uploadImageToServer(localImageFile!);
+
+                      if (uploadedImageUrl != null) {
+                        newImageURL = uploadedImageUrl;
+
+                        // Add the gift data after image upload
+                        await _addGift(
+                          name: newName,
+                          description: newDescription,
+                          category: newCategory,
+                          price: newPrice,
+                          status: 'Pending',
+                          eventID: selectedEvent!.id!,
+                          userID: userID,
+                          imagePath: newImageURL, // Uploaded URL
+                        );
+                        Navigator.of(context).pop();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Gift added successfully!")),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Failed to upload image.")),
+                        );
+                      }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content: Text("Please fill out all fields."),
+                        content: Text("Please fill out all fields and pick an image."),
                       ));
                     }
                   },
@@ -296,6 +384,38 @@ class _GiftListPageState extends State<GiftListPage> {
       },
     );
   }
+
+  /// Function to upload the image to the server
+  Future<String?> _uploadImageToServer(File imageFile) async {
+    const String apiKey = "64e6fa494339ed948f3532b1d48de822";
+    const String uploadUrl = "https://api.imgbb.com/1/upload";
+
+    try {
+      // Convert file to base64
+      String base64Image = base64Encode(await imageFile.readAsBytes());
+
+      // Prepare POST request
+      var response = await http.post(
+        Uri.parse("$uploadUrl?key=$apiKey"),
+        body: {
+          'image': base64Image,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        return jsonResponse['data']['url']; // Return the uploaded image URL
+      } else {
+        return null; // Upload failed
+      }
+    } catch (e) {
+      print("Error uploading image: $e");
+      return null;
+    }
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -358,9 +478,9 @@ class _GiftListPageState extends State<GiftListPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: CircleAvatar(
                       radius: 40,
-                      backgroundImage: AssetImage(
-                        gift.imagePath ?? 'asset/gift.png',
-                      ),
+                      backgroundImage: (gift.imagePath == null )
+                          ? const AssetImage('asset/gift.png') // Default asset image
+                          : NetworkImage(gift.imagePath!) as ImageProvider<Object>,
                     ),
                   ),
                   Expanded(
@@ -376,6 +496,11 @@ class _GiftListPageState extends State<GiftListPage> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Pledge Status: ${gift.status}",
+                            style: const TextStyle(fontSize: 20, color: Colors.white),
                           ),
                           const SizedBox(height: 4),
                           Text(
