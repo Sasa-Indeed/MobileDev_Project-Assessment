@@ -25,6 +25,26 @@ class _GiftListPageState extends State<GiftListPage> {
   bool isLoading = true;
   late StreamSubscription _firestoreSubscription;
 
+  final List<String> categories = [
+    "Book",
+    "Cloth",
+    "Electronics",
+    "Experience",
+    "Food/Gourmet Item",
+    "Gift Card",
+    "Home Decor",
+    "Jewelry",
+    "Personal Care Product",
+    "Subscription",
+    "Toy/Game"
+  ];
+
+  //For Sorting
+  List<Gift> filteredGifts = [];
+  String? selectedCategory;
+  String? selectedStatus;
+  bool isNameSorted = false;
+
   @override
   void initState() {
     super.initState();
@@ -34,7 +54,6 @@ class _GiftListPageState extends State<GiftListPage> {
       await _fetchEvents(userID);
       await _fetchGifts(userID);
 
-      // Listen for Firestore changes in real-time
       _firestoreSubscription = FirebaseGiftService.getGiftsStreamByUserID(userID).listen((giftList) {
         _syncLocalAndFirestoreGifts(giftList, userID);
       });
@@ -48,7 +67,34 @@ class _GiftListPageState extends State<GiftListPage> {
     super.dispose();
   }
 
+  // Add method to reset filters
+  void _resetFilters() {
+    setState(() {
+      selectedCategory = null;
+      selectedStatus = null;
+      isNameSorted = false;
+      filteredGifts = List.from(gifts);
+    });
+  }
 
+  // Add method to apply filters
+  void _applyFilters() {
+    setState(() {
+      filteredGifts = List.from(gifts);
+
+      if (selectedCategory != null) {
+        filteredGifts = filteredGifts.where((gift) => gift.category == selectedCategory).toList();
+      }
+
+      if (selectedStatus != null) {
+        filteredGifts = filteredGifts.where((gift) => gift.status == selectedStatus).toList();
+      }
+
+      if (isNameSorted) {
+        filteredGifts.sort((a, b) => a.name.compareTo(b.name));
+      }
+    });
+  }
 
 
   /// Real-time Firestore sync with local database.
@@ -84,35 +130,30 @@ class _GiftListPageState extends State<GiftListPage> {
     }
   }
 
+  // Modify _fetchGifts to initialize filteredGifts
   Future<void> _fetchGifts(int userID) async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      // Fetch local gifts
       final localGifts = await GiftDatabaseServices.getAllGiftsByUserID(userID);
-
-      // Fetch published gifts from Firestore
       final firestoreGifts = await FirebaseGiftService.getGiftsByUserID(userID);
 
-      // Combine both lists, avoiding duplicates
       Map<int, Gift> giftMap = {};
 
-      // Add local gifts to the map
       for (var gift in localGifts) {
         giftMap[gift.id!] = gift;
       }
 
-      // Add Firestore gifts only if they are not already in the map
       for (var gift in firestoreGifts) {
         if (!giftMap.containsKey(gift.id)) {
           giftMap[gift.id!] = gift;
         }
       }
 
-      // Convert map back to list
       gifts = giftMap.values.toList();
+      filteredGifts = List.from(gifts); // Initialize filtered gifts
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load gifts: $e')),
@@ -128,7 +169,7 @@ class _GiftListPageState extends State<GiftListPage> {
   Future<void> _deleteGift(Gift gift) async {
     try {
       await GiftDatabaseServices.deleteGift(gift);
-      await FirebaseGiftService.deleteGiftByID(gift.id!);
+      await FirebaseGiftService.deleteGiftByID(gift);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gift deleted successfully!')),
       );
@@ -224,13 +265,14 @@ class _GiftListPageState extends State<GiftListPage> {
       return;
     }
 
+
     String newName = '';
     String newDescription = '';
-    String newCategory = '';
+    String newCategory = categories.first; // Default to first category
     double newPrice = 0.0;
-    String? newImageURL; // To hold the uploaded URL after confirmation
-    Event? selectedEvent = upcomingEvents.first; // Default selected event
-    File? localImageFile; // Local file for image preview
+    String? newImageURL;
+    Event? selectedEvent = upcomingEvents.first;
+    File? localImageFile;
 
     final ImagePicker picker = ImagePicker();
 
@@ -259,10 +301,21 @@ class _GiftListPageState extends State<GiftListPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Category
-                    TextField(
-                      decoration: const InputDecoration(hintText: "Category"),
-                      onChanged: (value) => newCategory = value,
+                    // Category Dropdown
+                    DropdownButton<String>(
+                      value: newCategory,
+                      isExpanded: true,
+                      onChanged: (String? value) {
+                        setState(() {
+                          newCategory = value!;
+                        });
+                      },
+                      items: categories.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
                     ),
                     const SizedBox(height: 10),
 
@@ -288,13 +341,12 @@ class _GiftListPageState extends State<GiftListPage> {
                     // Pick Image Button
                     ElevatedButton(
                       onPressed: () async {
-                        // Pick an image file using ImagePicker
                         final XFile? pickedFile =
                         await picker.pickImage(source: ImageSource.gallery);
                         if (pickedFile != null) {
                           setState(() {
                             localImageFile = File(pickedFile.path);
-                            newImageURL = null; // Clear previous URL
+                            newImageURL = null;
                           });
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -326,30 +378,23 @@ class _GiftListPageState extends State<GiftListPage> {
                 ),
               ),
               actions: [
-                // Cancel Button
                 TextButton(
                   child: const Text("Cancel"),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-
-                // Add Button
                 TextButton(
                   child: const Text("Add"),
                   onPressed: () async {
-                    // Validate fields
                     if (newName.isNotEmpty &&
                         newDescription.isNotEmpty &&
-                        newCategory.isNotEmpty &&
                         newPrice > 0 &&
                         selectedEvent != null &&
                         localImageFile != null) {
-                      // Upload image only when all fields are validated
                       String? uploadedImageUrl = await _uploadImageToServer(localImageFile!);
 
                       if (uploadedImageUrl != null) {
                         newImageURL = uploadedImageUrl;
 
-                        // Add the gift data after image upload
                         await _addGift(
                           name: newName,
                           description: newDescription,
@@ -358,7 +403,7 @@ class _GiftListPageState extends State<GiftListPage> {
                           status: 'Pending',
                           eventID: selectedEvent!.id!,
                           userID: userID,
-                          imagePath: newImageURL, // Uploaded URL
+                          imagePath: newImageURL,
                         );
                         Navigator.of(context).pop();
 
@@ -435,95 +480,219 @@ class _GiftListPageState extends State<GiftListPage> {
         ),
         backgroundColor: MyColors.navy,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : gifts.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'asset/empty_gift.png',
-              width: 250,
-              height: 400,
-            ),
-            const Text(
-              'No Gifts to Display!',
-              style: TextStyle(fontSize: 25, color: MyColors.orange),
-            ),
-          ],
-        ),
-      )
-          : ListView.builder(
-        itemCount: gifts.length,
-        itemBuilder: (context, index) {
-          final gift = gifts[index];
-          return GestureDetector(
-            onTap: () async {
-              final result = await Navigator.pushNamed(
-                context,
-                '/GiftDetailsPage',
-                arguments: gift,
-              );
-
-              if (result is Gift) {
-                FirebaseGiftService.updateGiftInFirestore(result);
-              }
-            },
-            child: Card(
-              color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundImage: (gift.imagePath == null )
-                          ? const AssetImage('asset/gift.png') // Default asset image
-                          : NetworkImage(gift.imagePath!) as ImageProvider<Object>,
+      body: Column(
+        children: [
+          // Filtering buttons row
+          Container(
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                // Sort by name button
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isNameSorted ? MyColors.orange : MyColors.navy,
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            gift.name,
-                            style: const TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Pledge Status: ${gift.status}",
-                            style: const TextStyle(fontSize: 20, color: Colors.white),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Description: ${gift.description}",
-                            style: const TextStyle(fontSize: 20, color: Colors.white),
-                          ),
-                        ],
+                    onPressed: () {
+                      setState(() {
+                        isNameSorted = !isNameSorted;
+                        _applyFilters();
+                      });
+                    },
+                    child: Text(
+                      'Sort by Name',
+                      style: TextStyle(
+                        color: isNameSorted ? MyColors.navy : MyColors.orange,
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.white),
-                    onPressed: () {
-                      if (gift.status != "Pledged") {
-                        _deleteGift(gift);
-                      }
+                ),
+                // Category filter dropdown
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: DropdownButton<String>(
+                    hint: const Text('Filter by Category'),
+                    value: selectedCategory,
+                    style: const TextStyle(color: MyColors.navy),
+                    dropdownColor: MyColors.gray,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedCategory = newValue;
+                        _applyFilters();
+                      });
                     },
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('All Categories'),
+                      ),
+                      ...categories.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ],
+                  ),
+                ),
+                // Status filter dropdown
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: DropdownButton<String>(
+                    hint: const Text('Filter by Status'),
+                    value: selectedStatus,
+                    style: const TextStyle(color: MyColors.navy),
+                    dropdownColor: MyColors.gray,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedStatus = newValue;
+                        _applyFilters();
+                      });
+                    },
+                    items: const [
+                      DropdownMenuItem<String>(
+                        value: null,
+                        child: Text('All Status'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Pledged',
+                        child: Text('Pledged'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Unpledged',
+                        child: Text('Unpledged'),
+                      ),
+                      DropdownMenuItem<String>(
+                        value: 'Pending',
+                        child: Text('Pending'),
+                      ),
+                    ],
+                  ),
+                ),
+                // Reset filters button
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: MyColors.navy,
+                    ),
+                    onPressed: _resetFilters,
+                    child: const Text(
+                      'Reset Filters',
+                      style: TextStyle(color: MyColors.orange),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Gift list
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredGifts.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'asset/empty_gift.png',
+                    width: 250,
+                    height: 400,
+                  ),
+                  const Text(
+                    'No Gifts to Display!',
+                    style: TextStyle(fontSize: 25, color: MyColors.orange),
                   ),
                 ],
               ),
+            )
+                : ListView.builder(
+              itemCount: filteredGifts.length,
+              itemBuilder: (context, index) {
+                final gift = filteredGifts[index];
+                // Rest of your existing ListView.builder code...
+                return GestureDetector(
+                  onTap: () async {
+                    final result = await Navigator.pushNamed(
+                      context,
+                      '/GiftDetailsPage',
+                      arguments: gift,
+                    );
+
+                    if (result is Gift) {
+                      FirebaseGiftService.updateGiftInFirestore(result);
+                    }
+                  },
+                  child: Card(
+                    color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundImage: (gift.imagePath == null)
+                                ? const AssetImage('asset/gift.png')
+                                : NetworkImage(gift.imagePath!) as ImageProvider<Object>,
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 4.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  gift.name,
+                                  style: const TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Category: ${gift.category}",
+                                  style: const TextStyle(
+                                      fontSize: 20, color: Colors.white),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Event: ${gift.eventName}",
+                                  style: const TextStyle(
+                                      fontSize: 20, color: Colors.white),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Pledge Status: ${gift.status}",
+                                  style: const TextStyle(
+                                      fontSize: 20, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.white),
+                          onPressed: () {
+                            if (gift.status != "Pledged") {
+                              _deleteGift(gift);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddGiftDialog(userID),
@@ -545,7 +714,6 @@ class _GiftListPageState extends State<GiftListPage> {
               );
               return;
             }
-
             await _publishGifts(gifts, userID);
           },
           child: const Text(

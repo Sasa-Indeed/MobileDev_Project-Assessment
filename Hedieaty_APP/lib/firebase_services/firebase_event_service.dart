@@ -49,4 +49,24 @@ class FirebaseEventService {
     }
   }
 
+
+  static Future<void> updateEventInFirestore(Event event) async {
+    try {
+      QuerySnapshot snapshot = await _eventCollection
+      .where('userID', isEqualTo: event.userID)
+      .where('id', isEqualTo: event.id)
+      .limit(1)
+      .get();
+
+      if (snapshot.docs.isEmpty) {
+        throw Exception('Event not found in Firestore.');
+      }
+
+      // Update the first matching document
+      await snapshot.docs.first.reference.update(event.toFirestore());
+    } catch (e) {
+      throw Exception('Failed to update event: $e');
+    }
+  }
+
 }

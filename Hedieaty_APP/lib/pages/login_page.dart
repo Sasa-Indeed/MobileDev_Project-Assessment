@@ -37,51 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     await DatabaseVersionControl.initializeDatabase();
 
-
-
-    //await FirebaseCM2().initNotification();
-
-   /* await PushNotificaiton.init();
-
-    await PushNotificaiton.localNotiInit();
-
-    //Listen to background notification
-    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
-
-    //On background notification tapped
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message){
-      if(message.notification != null) {
-        print("Background Notification Tapped");
-        //Logic for navigation to notification screen
-      }
-    });
-
-    //To handle foreground notifications
-    FirebaseMessaging.onMessage.listen((RemoteMessage message){
-      String payloadData = jsonEncode(message.data);
-      print("Got a mess in foreground");
-      if(message.notification != null){
-        PushNotificaiton.showSimpleNotification(
-            title: message.notification!.title!,
-            body: message.notification!.body!,
-            payload: payloadData);
-      }
-    });
-    
-    
-    //For handling in terminated state 
-    final RemoteMessage? message = await FirebaseMessaging.instance.getInitialMessage();
-    
-    if(message != null){
-      print("Clicked in terminated state");
-    }
-
-    print("Initialization Complete!");*/
-
-/*    AccessTokenFirebase accessTokenFirebase = AccessTokenFirebase();
-    String token = await accessTokenFirebase.getAccessToken();
-
-    print(token);*/
   }
 
   bool _isValidEmail(String email) {

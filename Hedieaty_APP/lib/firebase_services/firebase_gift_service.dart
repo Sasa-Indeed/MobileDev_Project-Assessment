@@ -42,9 +42,13 @@ class FirebaseGiftService {
   }
 
   /// Delete a gift from Firestore by its `id` field
-  static Future<void> deleteGiftByID(int giftID) async {
+  static Future<void> deleteGiftByID(Gift gift) async {
     try {
-      QuerySnapshot snapshot = await _giftCollection.where('id', isEqualTo: giftID).get();
+      QuerySnapshot snapshot = await _giftCollection
+          .where('id', isEqualTo: gift.id)
+          .where('userID', isEqualTo: gift.userID)
+          .limit(1)
+          .get();
 
       if (snapshot.docs.isEmpty) {
         throw Exception('Gift not found in Firestore.');

@@ -102,92 +102,130 @@ class _EventListPageState extends State<EventListPage> {
 
 
   void _addEvent() {
+    final List<String> categories = [
+      "Birthday",
+      "Baby Shower",
+      "Wedding",
+      "Engagement Ceremony",
+      "House Party",
+      "Holiday Gathering",
+      "Family Gathering",
+      "Graduation"
+    ];
+
     showDialog(
       context: context,
       builder: (context) {
         String newName = '';
         String newLocation = '';
-        String newCategory = '';
+        String newCategory = categories.first; // Default to first category
         String newDescription = '';
         DateTime? newDate;
 
-        return AlertDialog(
-          title: const Text("Add New Event"),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  decoration: const InputDecoration(hintText: "Event Name"),
-                  onChanged: (value) => newName = value,
+        return StatefulBuilder(  // Added StatefulBuilder to handle dropdown state
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Add New Event"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      decoration: const InputDecoration(hintText: "Event Name"),
+                      onChanged: (value) => newName = value,
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      decoration: const InputDecoration(hintText: "Location"),
+                      onChanged: (value) => newLocation = value,
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Category Dropdown
+                    DropdownButton<String>(
+                      value: newCategory,
+                      isExpanded: true,
+                      onChanged: (String? value) {
+                        setState(() {
+                          newCategory = value!;
+                        });
+                      },
+                      items: categories.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      decoration: const InputDecoration(hintText: "Description"),
+                      onChanged: (value) => newDescription = value,
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      child: Text(newDate != null
+                          ? "Date & Time: ${_formatDateTime(newDate!)} ${_formatTime(newDate!)}"
+                          : "Pick Date & Time"),
+                      onPressed: () async {
+                        DateTime? pickedDateTime = await _pickDateTime(context);
+                        setState(() {
+                          newDate = pickedDateTime ?? DateTime.now();
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                TextField(
-                  decoration: const InputDecoration(hintText: "Location"),
-                  onChanged: (value) => newLocation = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(hintText: "Category"),
-                  onChanged: (value) => newCategory = value,
-                ),
-                TextField(
-                  decoration: const InputDecoration(hintText: "Description"),
-                  onChanged: (value) => newDescription = value,
+              ),
+              actions: [
+                TextButton(
+                  child: const Text("Cancel"),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
                 TextButton(
-                  child: Text(newDate != null
-                      ? "Date & Time: ${_formatDateTime(newDate!)} ${_formatTime(newDate!)}"
-                      : "Pick Date & Time"),
+                  child: const Text("Add"),
                   onPressed: () async {
-                    DateTime? pickedDateTime = await _pickDateTime(context);
-                    setState(() {
-                      newDate = pickedDateTime ?? DateTime.now();
-                    });
+                    if (newName.isNotEmpty &&
+                        newLocation.isNotEmpty &&
+                        newDescription.isNotEmpty &&
+                        newDate != null) {  // Removed newCategory check since it always has a value
+                      final newEvent = Event(
+                        name: newName,
+                        date: newDate!,
+                        location: newLocation,
+                        category: newCategory,
+                        description: newDescription,
+                        userID: userID,
+                      );
+
+                      // Save to local database
+                      int eventID = await EventDatabaseServices.insertEvent(newEvent);
+                      newEvent.id = eventID;
+
+                      // Save to Firebase
+                      try {
+                        await FirebaseEventService.addEventToFirebase(newEvent);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to add event: $e')),
+                        );
+                      }
+
+                      fetchEvents(); // Refresh the event list
+                      Navigator.of(context).pop();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please fill out all fields and pick a date."),
+                        ),
+                      );
+                    }
                   },
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text("Add"),
-              onPressed: () async {
-                if (newName.isNotEmpty &&
-                    newLocation.isNotEmpty &&
-                    newCategory.isNotEmpty &&
-                    newDescription.isNotEmpty &&
-                    newDate != null) {
-                  final newEvent = Event(
-                    name: newName,
-                    date: newDate!,
-                    location: newLocation,
-                    category: newCategory,
-                    description: newDescription,
-                    userID: userID,
-                  );
-
-                  // Save to local database
-                  int eventID = await EventDatabaseServices.insertEvent(newEvent);
-                  newEvent.id = eventID;
-
-                  // Save to Firebase
-                  try{
-                    await FirebaseEventService.addEventToFirebase(newEvent);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to add event: $e')),
-                    );
-                  }
-
-                  fetchEvents(); // Refresh the event list
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -195,6 +233,17 @@ class _EventListPageState extends State<EventListPage> {
 
 
   void _editEvent(Event event) {
+    final List<String> categories = [
+      "Birthday",
+      "Baby Shower",
+      "Wedding",
+      "Engagement Ceremony",
+      "House Party",
+      "Holiday Gathering",
+      "Family Gathering",
+      "Graduation"
+    ];
+
     showDialog(
       context: context,
       builder: (context) {
@@ -204,71 +253,134 @@ class _EventListPageState extends State<EventListPage> {
         String updatedDescription = event.description;
         DateTime updatedDate = event.date;
 
-        return AlertDialog(
-          title: const Text("Edit Event"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: const InputDecoration(hintText: "Event Name"),
-                controller: TextEditingController(text: event.name),
-                onChanged: (value) => updatedName = value,
+        // Validate that the existing category is in the list, otherwise use the first category
+        if (!categories.contains(updatedCategory)) {
+          updatedCategory = categories.first;
+        }
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Edit Event"),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      decoration: const InputDecoration(hintText: "Event Name"),
+                      controller: TextEditingController(text: event.name),
+                      onChanged: (value) => updatedName = value,
+                    ),
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      decoration: const InputDecoration(hintText: "Location"),
+                      controller: TextEditingController(text: event.location),
+                      onChanged: (value) => updatedLocation = value,
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Category Dropdown
+                    DropdownButton<String>(
+                      value: updatedCategory,
+                      isExpanded: true,
+                      onChanged: (String? value) {
+                        setState(() {
+                          updatedCategory = value!;
+                        });
+                      },
+                      items: categories.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 10),
+
+                    TextField(
+                      decoration: const InputDecoration(hintText: "Description"),
+                      controller: TextEditingController(text: event.description),
+                      onChanged: (value) => updatedDescription = value,
+                    ),
+                    const SizedBox(height: 10),
+
+                    TextButton(
+                      child: Text("Date: ${_formatDateTime(updatedDate)} ${_formatTime(updatedDate)}"),
+                      onPressed: () async {
+                        DateTime? pickedDate = await _pickDateTime(context);
+                        if (pickedDate != null) {
+                          setState(() {
+                            updatedDate = pickedDate;
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Location"),
-                controller: TextEditingController(text: event.location),
-                onChanged: (value) => updatedLocation = value,
-              ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Category"),
-                controller: TextEditingController(text: event.category),
-                onChanged: (value) => updatedCategory = value,
-              ),
-              TextField(
-                decoration: const InputDecoration(hintText: "Description"),
-                controller: TextEditingController(text: event.description),
-                onChanged: (value) => updatedDescription = value,
-              ),
-              TextButton(
-                child: Text("Date: ${_formatDateTime(updatedDate)} ${_formatTime(updatedDate)}"),
-                onPressed: () async {
-                  DateTime? pickedDate = await _pickDateTime(context);
-                  if (pickedDate != null) {
-                    setState(() {
-                      updatedDate = pickedDate;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: const Text("Save"),
-              onPressed: () async {
-                if (updatedName.isNotEmpty &&
-                    updatedLocation.isNotEmpty &&
-                    updatedCategory.isNotEmpty &&
-                    updatedDescription.isNotEmpty) {
-                  await EventDatabaseServices.updateEvent(Event(
-                    id: event.id,
-                    name: updatedName,
-                    location: updatedLocation,
-                    category: updatedCategory,
-                    description: updatedDescription,
-                    date: updatedDate,
-                    userID: userID,
-                  ));
-                  fetchEvents();
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
+              actions: [
+                TextButton(
+                  child: const Text("Cancel"),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  child: const Text("Save"),
+                  onPressed: () async {
+                    if (updatedName.isNotEmpty &&
+                        updatedLocation.isNotEmpty &&
+                        updatedDescription.isNotEmpty) {
+                      try {
+                        // Update in local database
+                        await EventDatabaseServices.updateEvent(Event(
+                          id: event.id,
+                          name: updatedName,
+                          location: updatedLocation,
+                          category: updatedCategory,
+                          description: updatedDescription,
+                          date: updatedDate,
+                          userID: userID,
+                        ));
+
+                        // Update in Firebase
+                        try {
+                          await FirebaseEventService.updateEventInFirestore(Event(
+                            id: event.id,
+                            name: updatedName,
+                            location: updatedLocation,
+                            category: updatedCategory,
+                            description: updatedDescription,
+                            date: updatedDate,
+                            userID: userID,
+                          )
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to update event in Firebase: $e')),
+                          );
+                        }
+
+                        fetchEvents();
+                        Navigator.of(context).pop();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Failed to update event. Please try again."),
+                          ),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Please fill out all fields."),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
