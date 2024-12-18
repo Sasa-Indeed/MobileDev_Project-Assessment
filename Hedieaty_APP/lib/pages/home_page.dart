@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hedieaty_app/Controller/n_service.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
-import 'package:hedieaty_app/database/event_database_services.dart';
 import 'package:hedieaty_app/database/friends_database_services.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_event_service.dart';
@@ -31,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _setupFriendsListener();
     });
+
   }
 
   Event? _getMostRecentFutureEvent(List<Event> events) {
@@ -242,9 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     user = ModalRoute.of(context)!.settings.arguments as Userdb;
 
-    return MaterialApp(
-      title: "Home",
-      home: Scaffold(
+    return Scaffold(
         backgroundColor: MyColors.gray,
         appBar: AppBar(
           title: const Text(
@@ -258,42 +257,79 @@ class _HomeScreenState extends State<HomeScreen> {
           centerTitle: true,
           backgroundColor: MyColors.navy,
         ),
-        body: friendCards.isEmpty
-            ? const Center(
-          child: Text(
-            "No friends yet,\n Add Friends to have fun!",
-            style: TextStyle(fontSize: 25, color: MyColors.orange),
+        body: Center(
+          child: Stack(
+            children: [
+              friendCards.isEmpty
+                  ? const Center(
+                child: Text(
+                  "No friends yet,\n Add Friends to have fun!",
+                  style: TextStyle(fontSize: 25, color: MyColors.orange),
+                ),
+              )
+                  : ListView(children: friendCards),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: CircularMenu(
+                  toggleButtonColor: MyColors.orange,
+                  items: [
+                    CircularMenuItem(
+                      color: MyColors.navy,
+                      icon: Icons.person_2_outlined,
+                      onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
+                    ),
+                    CircularMenuItem(
+                      color: MyColors.navy,
+                      icon: Icons.add,
+                      onTap: () => _showAddFriendPopup(context, user.id!),
+                    ),
+                    CircularMenuItem(
+                      color: MyColors.navy,
+                      icon: CupertinoIcons.gift,
+                      onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
+                    ),
+                    CircularMenuItem(
+                      color: MyColors.navy,
+                      icon: CupertinoIcons.calendar_badge_plus,
+                      onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
+                    ),
+                  ],
+                ),
+              )
+            ],
           ),
-        )
-            : ListView(children: friendCards),
-        floatingActionButton: CircularMenu(
-          alignment: Alignment.bottomCenter,
-          toggleButtonColor: MyColors.orange,
-          items: [
-            CircularMenuItem(
-              color: MyColors.navy,
-              icon: Icons.person_2_outlined,
-              onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
-            ),
-            CircularMenuItem(
-              color: MyColors.navy,
-              icon: Icons.add,
-              onTap: () => _showAddFriendPopup(context, user.id!),
-            ),
-            CircularMenuItem(
-              color: MyColors.navy,
-              icon: CupertinoIcons.gift,
-              onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
-            ),
-            CircularMenuItem(
-              color: MyColors.navy,
-              icon: CupertinoIcons.calendar_badge_plus,
-              onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
-            ),
-          ],
         ),
-      ),
-    );
+        /*floatingActionButton: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 0, 0, 40),
+          child: CircularMenu(
+            radius: 100,
+            alignment: Alignment.bottomCenter,
+            toggleButtonColor: MyColors.orange,
+            items: [
+              CircularMenuItem(
+                color: MyColors.navy,
+                icon: Icons.person_2_outlined,
+                onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
+              ),
+              CircularMenuItem(
+                color: MyColors.navy,
+                icon: Icons.add,
+                onTap: () => _showAddFriendPopup(context, user.id!),
+              ),
+              CircularMenuItem(
+                color: MyColors.navy,
+                icon: CupertinoIcons.gift,
+                onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
+              ),
+              CircularMenuItem(
+                color: MyColors.navy,
+                icon: CupertinoIcons.calendar_badge_plus,
+                onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
+              ),
+            ],
+          ),
+        )*/
+      );
   }
 }
 

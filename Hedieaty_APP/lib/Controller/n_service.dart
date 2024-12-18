@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:rxdart/rxdart.dart';
 
-// First, ensure you have this NavigationService class
 class NavigationService {
   static final NavigationService _instance = NavigationService._internal();
   factory NavigationService() => _instance;
@@ -11,6 +10,10 @@ class NavigationService {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   BuildContext? get context => navigatorKey.currentContext;
+
+  void updateContext(BuildContext newContext) {
+    navigatorKey.currentState?.context;
+  }
 }
 
 class NotificationService {
@@ -24,7 +27,6 @@ class NotificationService {
 
   Stream<List<Map<String, dynamic>>> get notificationQueue => _notificationQueue.stream;
 
-  // Global listener for notifications
   void startNotificationListener(int currentUserId) {
     _firestore
         .collection('notifications')
@@ -42,111 +44,96 @@ class NotificationService {
     });
   }
 
-  // Add notification to queue
   void _addToNotificationQueue(Map<String, dynamic> notification) {
     final currentQueue = _notificationQueue.value;
     currentQueue.add(notification);
     _notificationQueue.add(currentQueue);
 
-    // If this is the only notification, start processing
     if (currentQueue.length == 1) {
       _processNextNotification();
     }
   }
 
-  // Process next notification in queue
   void _processNextNotification() async {
     final currentQueue = _notificationQueue.value;
     if (currentQueue.isEmpty) return;
 
     final notification = currentQueue.first;
 
-    // Show bottom sheet notification
-    await _showBottomSheetNotification(notification);
+    showScaffoldNotification(notification);
 
-    // Mark notification as read
     await _markNotificationAsRead(notification['docId']);
 
-    // Remove from queue
     currentQueue.removeAt(0);
     _notificationQueue.add(currentQueue);
 
-    // Process next notification if exists
     if (currentQueue.isNotEmpty) {
       _processNextNotification();
     }
   }
 
-  // Show bottom sheet notification
-  Future<void> _showBottomSheetNotification(Map<String, dynamic> notification) async {
+  void showScaffoldNotification(Map<String, dynamic> notification) {
     BuildContext? context = _getCurrentContext();
     if (context == null) return;
 
-    await showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                notification['title'] ?? 'Notification',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                notification['body'] ?? '',
-                style: TextStyle(fontSize: 16),
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // Navigate to notifications page
-                  _navigateToNotificationsPage();
-                },
-                child: Text('View All Notifications'),
-              ),
-            ],
+    final snackBar = SnackBar(
+      content: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Colors.orange, Colors.grey],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
-        );
-      },
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              notification['title'] ?? 'Notification',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              notification['body'] ?? '',
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      duration: const Duration(seconds: 2),
     );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  // Mark individual notification as read
   Future<void> _markNotificationAsRead(String docId) async {
-    await _firestore
-        .collection('notifications')
-        .doc(docId)
-        .update({'status': true});
+    await _firestore.collection('notifications').doc(docId).update({'status': true});
   }
 
-  // Navigate to notifications page and mark all as read
-  void _navigateToNotificationsPage() async {
-    BuildContext? context = _getCurrentContext();
-    if (context == null) return;
-
-    // Navigate to notifications page using your app's navigation method
-    // For example, if using named routes:
-    Navigator.of(context).pushNamed('/notifications');
-
-    // Or if using a specific page:
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(builder: (context) => NotificationsPage()),
-    // );
-  }
-
-  // Utility to get current context using NavigationService
   BuildContext? _getCurrentContext() {
     return NavigationService().context;
   }
 }
+
+
 
 /*// Notifications page to display all notifications
 class NotificationsPage extends StatefulWidget {

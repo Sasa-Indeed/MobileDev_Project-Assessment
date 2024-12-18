@@ -37,6 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     await DatabaseVersionControl.initializeDatabase();
 
+
+
     //await FirebaseCM2().initNotification();
 
    /* await PushNotificaiton.init();
