@@ -51,8 +51,13 @@ dependencies:
   rxdart: ^0.28.0
   image_picker: ^1.1.2
   permission_handler: ^11.3.1
+  flutter_launcher_icons: ^0.14.2
+  curved_navigation_bar: ^1.0.6
+
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   test:
@@ -68,6 +73,12 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+flutter_launcher_icons:
+  android: "launcher_icons"
+  image_path: "asset/icon/image.jpg"
+  adaptive_icon_background: "#5f8f3c"
+  adaptive_icon_foreground: "asset/icon/image.jpg"
 
 # The following section is specific to Flutter packages.
 flutter:

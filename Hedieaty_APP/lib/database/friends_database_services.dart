@@ -109,10 +109,6 @@ class FriendsDatabaseServices{
       // Merge the two lists
       Set<int> allFriendIDs = {...firebaseFriendIDs, ...localFriendIDs};
 
-      for(int i in allFriendIDs){
-        print("$i \n");
-      }
-
       // Update Firebase if there are new friends locally not present in Firebase
       if (!listEquals(firebaseFriendIDs, allFriendIDs.toList())) {
         await FirebaseFriendServices.updateFriendsInFirestore(userID, allFriendIDs.toList());
@@ -134,10 +130,7 @@ class FriendsDatabaseServices{
 
       localFriendIDs = await getFriendsIDs(userID);
 
-
-
       for(int friendID in localFriendIDs){
-        print("$friendID \n");
         if(!await UserDatabaseServices.checkUserByID(friendID)){
           Userdb? user = await FirebaseUserServices.fetchUserById(friendID);
           if(user != null){

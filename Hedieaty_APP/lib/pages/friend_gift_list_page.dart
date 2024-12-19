@@ -95,6 +95,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
           status: false,
           timestamp: DateTime.now(),
         );
+
         int notifID = await NotificationDatabaseServices.insertNotification(unPledgeNotifications);
 
         unPledgeNotifications.id = notifID;

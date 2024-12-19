@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        key: Key('InvalidEmailPopup'),
         title: Text(title),
         content: Text(message),
         actions: [
@@ -137,6 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
                         TextField(
+                          key: const Key('EmailField'),
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: "Email",
@@ -151,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
                         TextField(
+                          key: const Key('PasswordField'),
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
@@ -192,6 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               gradient: const LinearGradient(colors: [MyColors.orange, MyColors.blue]),
                             ),
                             child: ElevatedButton(
+                              key: Key('LoginButton'),
                               onPressed: () => _loginUser(context),
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),

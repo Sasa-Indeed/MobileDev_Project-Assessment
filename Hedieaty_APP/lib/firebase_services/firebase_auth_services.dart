@@ -48,8 +48,6 @@ class FirebaseAuthServices {
       }
       List<int> friends = [];
 
-      //Get the device token for the user
-      //String? deviceToken = await FirebaseCM2.getDeviceToken();
 
       // Update Firebase Firestore with user data
       await _firestore.collection("users").doc(firebaseUserId).set({

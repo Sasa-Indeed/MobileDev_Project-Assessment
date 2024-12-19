@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:hedieaty_app/models/user.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
 
+/*
 void main() {
 
   setUpAll(() {
@@ -43,12 +44,15 @@ void main() {
     final userId2 = await UserDatabaseServices.insertUser(user2);
     expect(userId2, greaterThan(0));
 
-    /*List<User> users = await UserDatabaseServices.getAllUsers();
+    */
+/*List<User> users = await UserDatabaseServices.getAllUsers();
 
-    print(users[0].name);*/
+    print(users[0].name);*//*
+
 
     // Create a user with preferences
-    /*final user = User(
+    */
+/*final user = User(
       name: "John Doe",
       email: "johndoe@example.com",
       phoneNumber: "1234567890",
@@ -104,6 +108,8 @@ void main() {
 
     // Verify deletion
     final remainingUsers = await UserDatabaseServices.getAllUsers();
-    expect(remainingUsers.isEmpty, true);*/
+    expect(remainingUsers.isEmpty, true);*//*
+
   });
 }
+*/

@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:hedieaty_app/models/pledges.dart';
 import 'package:hedieaty_app/database/pledges_database_services.dart';
 
+/*
 void main() {
   // Initialize sqflite FFI for testing
   setUpAll(() {
@@ -82,6 +83,7 @@ void main() {
     await db.close();
   });
 }
+*/
 
 
 

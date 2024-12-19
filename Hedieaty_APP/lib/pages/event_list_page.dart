@@ -131,11 +131,13 @@ class _EventListPageState extends State<EventListPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
+                      key: const Key('Event Name'),
                       decoration: const InputDecoration(hintText: "Event Name"),
                       onChanged: (value) => newName = value,
                     ),
                     const SizedBox(height: 10),
                     TextField(
+                      key: const Key('Location'),
                       decoration: const InputDecoration(hintText: "Location"),
                       onChanged: (value) => newLocation = value,
                     ),
@@ -160,6 +162,7 @@ class _EventListPageState extends State<EventListPage> {
                     const SizedBox(height: 10),
 
                     TextField(
+                      key: const Key('Description'),
                       decoration: const InputDecoration(hintText: "Description"),
                       onChanged: (value) => newDescription = value,
                     ),

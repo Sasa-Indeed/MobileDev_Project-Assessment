@@ -1,3 +1,4 @@
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/Controller/n_service.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
@@ -268,34 +269,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
                   : ListView(children: friendCards),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: CircularMenu(
-                  toggleButtonColor: MyColors.orange,
-                  items: [
-                    CircularMenuItem(
-                      color: MyColors.navy,
-                      icon: Icons.person_2_outlined,
-                      onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
-                    ),
-                    CircularMenuItem(
-                      color: MyColors.navy,
-                      icon: Icons.add,
-                      onTap: () => _showAddFriendPopup(context, user.id!),
-                    ),
-                    CircularMenuItem(
-                      color: MyColors.navy,
-                      icon: CupertinoIcons.gift,
-                      onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
-                    ),
-                    CircularMenuItem(
-                      color: MyColors.navy,
-                      icon: CupertinoIcons.calendar_badge_plus,
-                      onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
-                    ),
-                  ],
-                ),
-              )
+                /*Align(
+                  key: const Key("circularMenu"),
+                  alignment: Alignment.bottomCenter,
+                  child: CircularMenu(
+                    toggleButtonColor: MyColors.orange,
+                    items: [
+                      CircularMenuItem(
+                        color: MyColors.navy,
+                        icon: Icons.person_2_outlined,
+                        onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
+                      ),
+                      CircularMenuItem(
+                        color: MyColors.navy,
+                        icon: Icons.add,
+                        onTap: () => _showAddFriendPopup(context, user.id!),
+                      ),
+                      CircularMenuItem(
+                        color: MyColors.navy,
+                        icon: CupertinoIcons.gift,
+                        onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
+                      ),
+                      CircularMenuItem(
+                        color: MyColors.navy,
+                        icon: CupertinoIcons.calendar_badge_plus,
+                        onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
+                      ),
+                    ],
+                  ),
+                ),*/
             ],
           ),
         ),
@@ -329,6 +331,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         )*/
+
+        bottomNavigationBar: CurvedNavigationBar(
+          backgroundColor: MyColors.blue,
+          color: MyColors.orange,
+          items: const <Widget>[
+            Icon(Icons.person_2_outlined, size: 30, key: Key('profileIcon'),),
+            Icon(Icons.add, size: 30, key: Key('addIcon'),),
+            Icon(CupertinoIcons.gift, size: 30, key: Key('giftIcon'),),
+            Icon(CupertinoIcons.calendar_badge_plus, size: 30, key: Key('eventIcon'),),
+          ],
+          onTap: (index) {
+            switch(index){
+              case 0:
+                Navigator.pushNamed(context, '/ProfilePage', arguments: user);
+                break;
+              case 1:
+                _showAddFriendPopup(context, user.id);
+                break;
+              case 2:
+                Navigator.pushNamed(context, '/GiftListPage', arguments: user.id);
+                break;
+              case 3:
+                Navigator.pushNamed(context, '/EventListPage', arguments: user.id);
+                break;
+            }
+          },
+        )
       );
   }
 }

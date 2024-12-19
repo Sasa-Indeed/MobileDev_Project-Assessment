@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hedieaty_app/Controller/n_service.dart';
 import 'package:hedieaty_app/firebase_services/firebase_auth_services.dart';
+import 'package:hedieaty_app/firebase_services/firebase_user_services.dart';
 import '../custom_widgets/colors.dart';
 import 'package:hedieaty_app/models/user.dart';
-import 'package:hedieaty_app/database/user_database_services.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -87,6 +87,11 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+  if((await FirebaseUserServices.checkPhoneNumberExits(phone))){
+    _showPopup(context, "Invalid Phone Number", "The phone number already exits try using another number or sign in.");
+    return;
+  }
+
     try {
       final Userdb? user = await FirebaseAuthServices().signupUser(
         name: name,
@@ -106,7 +111,6 @@ class _SignupScreenState extends State<SignupScreen> {
       _showPopup(context, "Error", e.toString());
     }
   }
-
 
   @override
   Widget build(BuildContext context) {

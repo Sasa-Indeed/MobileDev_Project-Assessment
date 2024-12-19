@@ -68,4 +68,25 @@ class FirebaseUserServices {
       return -1; // Handle errors gracefully
     }
   }
+
+
+  /// Checks if a phone number exits in the firebase or not
+  /// Returns true if exits and false if does not exit
+  static Future<bool> checkPhoneNumberExits(String phoneNumber) async {
+    try {
+      final QuerySnapshot querySnapshot = await _userCollection
+          .where('phoneNumber', isEqualTo: phoneNumber)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      print("Error finding phone number: $e");
+      return true; // Handle errors gracefully
+    }
+  }
+
 }

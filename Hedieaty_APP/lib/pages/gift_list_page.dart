@@ -385,14 +385,24 @@ class _GiftListPageState extends State<GiftListPage> {
                 TextButton(
                   child: const Text("Add"),
                   onPressed: () async {
+                    bool flag = true;
                     if (newName.isNotEmpty &&
                         newDescription.isNotEmpty &&
                         newPrice > 0 &&
-                        selectedEvent != null &&
-                        localImageFile != null) {
-                      String? uploadedImageUrl = await _uploadImageToServer(localImageFile!);
+                        selectedEvent != null) {
+                      String? uploadedImageUrl;
 
-                      if (uploadedImageUrl != null) {
+                      if(localImageFile != null){
+                        uploadedImageUrl = await _uploadImageToServer(localImageFile!);
+                        if(uploadedImageUrl == null){
+                          flag = false;
+                        }
+                      }else{
+                        uploadedImageUrl = null;
+                      }
+
+
+                      if (flag) {
                         newImageURL = uploadedImageUrl;
 
                         await _addGift(
@@ -458,8 +468,6 @@ class _GiftListPageState extends State<GiftListPage> {
       return null;
     }
   }
-
-
 
 
   @override
