@@ -255,6 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           GestureDetector(
+            key: const Key("Signup Button"),
             onTap: () {
               Navigator.pushNamed(context, '/signup');
             },

@@ -131,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 10),
                   TextField(
+                    key: const Key("Add Friend Input"),
                     controller: inputController,
                     decoration: InputDecoration(
                       labelText: isUsingEmail
@@ -149,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const Text("Cancel"),
                 ),
                 TextButton(
+                  key: const Key("Add Friend Button"),
                   onPressed: () async {
                     String input = inputController.text.trim();
                     if (input.isEmpty) {

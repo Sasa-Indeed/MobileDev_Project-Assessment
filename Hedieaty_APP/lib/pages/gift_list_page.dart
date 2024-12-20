@@ -289,6 +289,7 @@ class _GiftListPageState extends State<GiftListPage> {
                   children: [
                     // Gift Name
                     TextField(
+                      key: const Key('Gift Name'),
                       decoration: const InputDecoration(hintText: "Gift Name"),
                       onChanged: (value) => newName = value,
                     ),
@@ -296,6 +297,7 @@ class _GiftListPageState extends State<GiftListPage> {
 
                     // Description
                     TextField(
+                      key: const Key('Gift Description'),
                       decoration: const InputDecoration(hintText: "Description"),
                       onChanged: (value) => newDescription = value,
                     ),
@@ -303,6 +305,7 @@ class _GiftListPageState extends State<GiftListPage> {
 
                     // Category Dropdown
                     DropdownButton<String>(
+                      key: const Key("Dropdown Category"),
                       value: newCategory,
                       isExpanded: true,
                       onChanged: (String? value) {
@@ -321,6 +324,7 @@ class _GiftListPageState extends State<GiftListPage> {
 
                     // Price
                     TextField(
+                      key: const Key('Price'),
                       decoration: const InputDecoration(hintText: "Price"),
                       keyboardType: TextInputType.number,
                       onChanged: (value) => newPrice = double.tryParse(value) ?? 0.0,
@@ -383,6 +387,7 @@ class _GiftListPageState extends State<GiftListPage> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 TextButton(
+                  key: const Key("Add Button"),
                   child: const Text("Add"),
                   onPressed: () async {
                     bool flag = true;

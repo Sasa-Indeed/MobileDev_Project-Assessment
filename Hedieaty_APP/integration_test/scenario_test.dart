@@ -10,7 +10,8 @@ void main() {
   testWidgets('Login integration test', (WidgetTester tester) async {
     // Launch the app
     app.main();
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 5));
 
     // Find widgets
     final emailField = find.byKey(const Key('EmailField'));
@@ -19,9 +20,11 @@ void main() {
 
     // Simulate user input with delays
     await tester.enterText(passwordField, '123456');
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
     await tester.enterText(emailField, 'a@gmail.com');
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 1));
 
     //login
     await tester.tap(loginButton);
@@ -29,10 +32,12 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 15));
 
 
+
     // Find the event icon
     final eIcon = find.byKey(const Key('eventIcon'));
     await tester.tap(eIcon.first);
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
 
     //Add event
     // Tap on the add button
@@ -54,16 +59,20 @@ void main() {
 
     // Pick date and time
     await tester.tap(find.text('Pick Date & Time'));
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
 
     await tester.tap(find.text('31').last); // Pick date: 26
     await tester.tap(find.text('31').last);
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
     await tester.tap(find.text('OK')); // Confirm date
 
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
     await tester.tap(find.text('OK')); // Confirm time
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
 
     // Submit the form
     await tester.tap(find.text('Add'));
@@ -82,8 +91,30 @@ void main() {
     // Find the gift icon
     final giftIcon = find.byKey(const Key('giftIcon'));
     await tester.tap(giftIcon.first);
-    await tester.pumpAndSettle(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
 
+    final addGiftButtonFinder = find.byType(FloatingActionButton);
+    expect(addGiftButtonFinder, findsOneWidget);
+    await tester.tap(addGiftButtonFinder);
+    await tester.pumpAndSettle();
+
+    // Enter event details
+    await tester.enterText(find.byKey(const Key('Gift Name')), 'Fish');
+    await tester.enterText(find.byKey(const Key('Gift Description')), 'I want fish');
+    await tester.enterText(find.byKey(const Key('Price')), '256');
+
+    // Select category
+    final dropdownMenu = find.byKey(const Key("Dropdown Category"));
+    await tester.tap(dropdownMenu);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Food/Gourmet Item').last);
+    await tester.pumpAndSettle();
+
+    final addButton = find.byKey(const Key('Add Button'));
+    await tester.tap(addButton);
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 5));
 
   });
 }

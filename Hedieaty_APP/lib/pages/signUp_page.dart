@@ -180,6 +180,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     itemBuilder: (context, index) {
                                       final imagePath = _profileImages[index];
                                       return GestureDetector(
+                                        key: const Key("Image"),
                                         onTap: () {
                                           setState(() {
                                             _selectedProfileImage = imagePath;
@@ -265,6 +266,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           const SizedBox(height: 10),
                           DropdownButtonFormField<String>(
+                            key: const Key("Preferences"),
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: Colors.grey[200],
