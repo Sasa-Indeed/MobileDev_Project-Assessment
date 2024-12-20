@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          "Welcome!,\n Log In Here",
+                          "Welcome!, To Hedieaty\n Log In Here",
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,

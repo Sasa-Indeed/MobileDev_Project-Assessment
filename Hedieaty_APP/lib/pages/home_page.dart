@@ -1,6 +1,5 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:hedieaty_app/Controller/n_service.dart';
 import 'package:hedieaty_app/custom_widgets/colors.dart';
 import 'package:hedieaty_app/database/friends_database_services.dart';
 import 'package:hedieaty_app/database/user_database_services.dart';
@@ -9,9 +8,7 @@ import 'package:hedieaty_app/firebase_services/firebase_friend_services.dart';
 import 'package:hedieaty_app/firebase_services/firebase_user_services.dart';
 import 'package:hedieaty_app/models/friends.dart';
 import 'package:hedieaty_app/models/user.dart';
-import 'package:circular_menu/circular_menu.dart';
 import 'package:flutter/cupertino.dart';
-
 import '../custom_widgets/friend_card.dart';
 import '../models/event.dart';
 
@@ -71,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
             mostRecentEvent = recentEvent.name;
           }
         }
-
 
         cards.add(
           FriendCard(
@@ -168,6 +164,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       return;
                     }
 
+                    if(!isUsingEmail && (user.phoneNumber == input)){
+                      _showErrorDialog(context, "Cannot Add Yourself", "Get some real friends");
+                      return;
+                    }
+
+                    if(isUsingEmail && (user.email == input)){
+                      _showErrorDialog(context, "Cannot Add Yourself", "Get some real friends");
+                      return;
+                    }
+
                     // Check if already friends
                     bool isAlreadyFriend = await FriendsDatabaseServices.checkFriendExists(currentUserID, friendID) != -1;
 
@@ -215,6 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text(message),
           actions: [
             TextButton(
+              key: const Key("OK Button"),
               onPressed: () => Navigator.pop(context),
               child: const Text("OK"),
             ),
@@ -271,69 +278,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               )
                   : ListView(children: friendCards),
-                /*Align(
-                  key: const Key("circularMenu"),
-                  alignment: Alignment.bottomCenter,
-                  child: CircularMenu(
-                    toggleButtonColor: MyColors.orange,
-                    items: [
-                      CircularMenuItem(
-                        color: MyColors.navy,
-                        icon: Icons.person_2_outlined,
-                        onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
-                      ),
-                      CircularMenuItem(
-                        color: MyColors.navy,
-                        icon: Icons.add,
-                        onTap: () => _showAddFriendPopup(context, user.id!),
-                      ),
-                      CircularMenuItem(
-                        color: MyColors.navy,
-                        icon: CupertinoIcons.gift,
-                        onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
-                      ),
-                      CircularMenuItem(
-                        color: MyColors.navy,
-                        icon: CupertinoIcons.calendar_badge_plus,
-                        onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
-                      ),
-                    ],
-                  ),
-                ),*/
             ],
           ),
         ),
-        /*floatingActionButton: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 0, 0, 40),
-          child: CircularMenu(
-            radius: 100,
-            alignment: Alignment.bottomCenter,
-            toggleButtonColor: MyColors.orange,
-            items: [
-              CircularMenuItem(
-                color: MyColors.navy,
-                icon: Icons.person_2_outlined,
-                onTap: () => Navigator.pushNamed(context, '/ProfilePage', arguments: user),
-              ),
-              CircularMenuItem(
-                color: MyColors.navy,
-                icon: Icons.add,
-                onTap: () => _showAddFriendPopup(context, user.id!),
-              ),
-              CircularMenuItem(
-                color: MyColors.navy,
-                icon: CupertinoIcons.gift,
-                onTap: () => Navigator.pushNamed(context, '/GiftListPage', arguments: user.id),
-              ),
-              CircularMenuItem(
-                color: MyColors.navy,
-                icon: CupertinoIcons.calendar_badge_plus,
-                onTap: () => Navigator.pushNamed(context, '/EventListPage', arguments: user.id),
-              ),
-            ],
-          ),
-        )*/
-
         bottomNavigationBar: CurvedNavigationBar(
           backgroundColor: MyColors.blue,
           color: MyColors.orange,

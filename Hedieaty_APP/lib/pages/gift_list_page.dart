@@ -169,7 +169,9 @@ class _GiftListPageState extends State<GiftListPage> {
   Future<void> _deleteGift(Gift gift) async {
     try {
       await GiftDatabaseServices.deleteGift(gift);
-      await FirebaseGiftService.deleteGiftByID(gift);
+      if(await FirebaseGiftService.findGiftsByID(gift)){
+        await FirebaseGiftService.deleteGiftByID(gift);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gift deleted successfully!')),
       );
@@ -178,6 +180,8 @@ class _GiftListPageState extends State<GiftListPage> {
         SnackBar(content: Text('Failed to delete gift: $e')),
       );
     }
+
+    _fetchGifts(gift.userID);
   }
 
   /// Publishes local gifts to Firestore.
@@ -641,6 +645,7 @@ class _GiftListPageState extends State<GiftListPage> {
                     }
                   },
                   child: Card(
+                    key: const Key("giftCard"),
                     color: gift.status == "Pledged" ? Colors.orange : Colors.blue,
                     child: Row(
                       children: [

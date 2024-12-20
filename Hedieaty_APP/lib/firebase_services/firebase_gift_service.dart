@@ -24,6 +24,25 @@ class FirebaseGiftService {
     }
   }
 
+  /// Get all gifts for a specific user from Firestore (once)
+  static Future<bool> findGiftsByID(Gift gift) async {
+    try {
+      QuerySnapshot snapshot = await _giftCollection
+          .where('id', isEqualTo: gift.id)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      throw Exception('Failed to find gift: $e');
+      return false;
+    }
+  }
+
   /// Update an existing gift in Firestore
   /// Finds the gift by its `id` field and updates it
   static Future<void> updateGiftInFirestore(Gift gift) async {

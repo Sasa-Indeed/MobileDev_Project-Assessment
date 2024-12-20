@@ -35,7 +35,8 @@ class _EventListPageState extends State<EventListPage> {
     setState(() {
       isLoading = true;
     });
-    events = await EventDatabaseServices.getEventsByUser(userID);
+
+    events = await FirebaseEventService.getEventsByUserID(userID);
     filterEvents(selectedStatus);
     setState(() {
       isLoading = false;

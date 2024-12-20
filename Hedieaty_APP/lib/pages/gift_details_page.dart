@@ -15,7 +15,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
   late Gift _gift; // Use late to initialize in initState
 
   // Controllers for text fields to capture changes
-  late TextEditingController _nameController;
+  TextEditingController? _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _categoryController;
   late TextEditingController _priceController;
@@ -42,7 +42,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
   @override
   void dispose() {
     // Dispose controllers to prevent memory leaks
-    _nameController.dispose();
+    _nameController!.dispose();
     _descriptionController.dispose();
     _categoryController.dispose();
     _priceController.dispose();
@@ -53,7 +53,7 @@ class _GiftDetailsPageState extends State<GiftDetailsPage> {
     if (_formKey.currentState?.validate() ?? false) {
       // Create an updated gift object with new values
       Gift updatedGift = _gift.copyWith(
-        name: _nameController.text,
+        name: _nameController!.text,
         description: _descriptionController.text,
         category: _categoryController.text,
         price: double.tryParse(_priceController.text) ?? _gift.price,

@@ -116,6 +116,36 @@ void main() {
     await tester.pumpAndSettle();
     await Future.delayed(const Duration(seconds: 5));
 
+    //Looping until the gift gets pledged or un pledged
+    final giftCard = find.byKey(const Key("giftCard")).first;
+
+    // Wait until the color of the gift card changes
+    Color? initialColor;
+    bool colorChanged = false;
+
+    while (!colorChanged) {
+      // Retrieve the widget to check its color
+      final giftCardWidget = tester.widget<Card>(giftCard);
+
+      // Assuming the gift card has a color property, e.g., giftCardWidget.color
+      final currentColor = giftCardWidget.color;
+
+      if (initialColor == null) {
+        initialColor = currentColor; // Set the initial color
+      } else if (initialColor != currentColor) {
+        colorChanged = true; // Color has changed
+      }
+
+      // Pump the tester to allow the UI to update
+      await tester.pumpAndSettle();
+
+      // Optional: Add a delay to avoid rapid looping
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+
+    await Future.delayed(const Duration(seconds: 10));
+
   });
 }
 

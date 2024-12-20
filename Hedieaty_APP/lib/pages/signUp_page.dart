@@ -149,7 +149,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            "New User?\nRegister Here",
+                            "New To Hedieaty?\nRegister Here",
                             style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.bold,
@@ -244,6 +244,16 @@ class _SignupScreenState extends State<SignupScreen> {
                                 _isPasswordVisible = !_isPasswordVisible;
                               });
                             },
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 12.0, top: 4.0),
+                            child: Text(
+                              "The password must at least be 6 characters",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 20),
                           _buildTextField(

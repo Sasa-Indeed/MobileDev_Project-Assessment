@@ -23,7 +23,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
   bool isLoading = true;
   late int friendID;
   late Userdb user;
-  late String friendName;
+  String friendName = '';
 
   @override
   void initState() {
@@ -255,6 +255,7 @@ class _FriendGiftListPageState extends State<FriendGiftListPage> {
                 Column(
                   children: [
                     Switch(
+                      key: const Key("Pledge Button"),
                       value: gift.status == "Pledged",
                       onChanged: isPastDue
                           ? null

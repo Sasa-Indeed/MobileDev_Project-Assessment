@@ -19,6 +19,11 @@ void main() {
     await Future.delayed(const Duration(seconds: 1));
 
 
+    // Enter name
+    final nameField = find.bySemanticsLabel("Name");
+    await tester.enterText(nameField, "Shalaby");
+    await Future.delayed(const Duration(seconds: 5));
+
     // Select profile image
     final imageSelector = find.text("Select Profile Image");
     await tester.tap(imageSelector);
@@ -40,6 +45,7 @@ void main() {
     await tester.enterText(phoneField, "1234");
     await Future.delayed(const Duration(seconds: 2));
 
+
     // Enter password
     final passwordField = find.bySemanticsLabel("Password");
     await tester.enterText(passwordField, "123456");
@@ -50,10 +56,6 @@ void main() {
     await tester.enterText(confirmPasswordField, "123456");
     await Future.delayed(const Duration(seconds: 2));
 
-    // Enter name
-    final nameField = find.bySemanticsLabel("Name");
-    await tester.enterText(nameField, "Shalaby");
-    await Future.delayed(const Duration(seconds: 2));
 
     // Scroll down to preferences
     await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -350));
@@ -104,8 +106,22 @@ void main() {
 
     final friendAddButton = find.byKey(const Key("Add Friend Button"));
     await tester.tap(friendAddButton);
-    await tester.pumpAndSettle(const Duration(seconds: 2)
-    );
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    final okButton = find.text("OK");
+    await tester.tap(okButton);
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    //Enter friend page
+    final friendCard = find.text("Ahmed Mostafa");
+    await tester.tap(friendCard);
+    await tester.pumpAndSettle();
+    await Future.delayed(const Duration(seconds: 2));
+
+    final pledgeButton = find.byKey(const Key("Pledge Button"));
+    await tester.tap(pledgeButton.first);
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
     await Future.delayed(const Duration(seconds: 15));
 
   });
